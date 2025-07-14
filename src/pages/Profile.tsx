@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ArrowLeft, User, Phone, MapPin, Star, Calendar, Package, Crown, Settings } from 'lucide-react';
+import { ArrowLeft, User, Phone, MapPin, Star, Calendar, Package, Crown, Settings, Edit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useOrders } from '../contexts/FirebaseOrderContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -55,24 +55,33 @@ const Profile: React.FC = () => {
       <div className="p-4 space-y-6">
         {/* Profile Info Card */}
         <div className="bg-white rounded-xl p-6 shadow-sm">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
-              <User className="w-8 h-8 text-gray-500" />
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
+                <User className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-800">
+                  {userProfile.name}
+                </h2>
+                <p className="text-gray-600">
+                  {userProfile.userType === 'client' ? 'عميل' : `حرفي ${userProfile.specialty || ''}`}
+                </p>
+                {userProfile.userType === 'crafter' && averageRating > 0 && (
+                  <div className="flex items-center gap-1 mt-1">
+                    <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                    <span className="text-sm text-gray-600">{averageRating.toFixed(1)}</span>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="flex-1">
-              <h2 className="text-xl font-bold text-gray-800">
-                {userProfile.name}
-              </h2>
-              <p className="text-gray-600">
-                {userProfile.userType === 'client' ? 'عميل' : `حرفي ${userProfile.specialty || ''}`}
-              </p>
-              {userProfile.userType === 'crafter' && averageRating > 0 && (
-                <div className="flex items-center gap-1 mt-1">
-                  <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                  <span className="text-sm text-gray-600">{averageRating.toFixed(1)}</span>
-                </div>
-              )}
-            </div>
+            <button
+              onClick={() => navigate('/edit-profile')}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+            >
+              <Edit className="w-4 h-4" />
+              تعديل
+            </button>
           </div>
 
           <div className="space-y-3">

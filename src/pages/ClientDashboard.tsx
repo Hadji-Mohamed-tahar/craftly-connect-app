@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, MessageCircle, Star, CheckCircle, User, Settings, Package, Eye } from 'lucide-react';
+import { Plus, MessageCircle, Star, CheckCircle, User, Settings, Package, Eye, Search } from 'lucide-react';
 import { useOrders } from '../contexts/FirebaseOrderContext';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -95,7 +95,7 @@ const ClientDashboard: React.FC = () => {
 
       <div className="px-4 py-6 space-y-6">
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 mb-4">
           <button
             onClick={() => navigate('/create-order')}
             className="bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-xl font-medium transition-colors flex flex-col items-center gap-2"
@@ -104,18 +104,35 @@ const ClientDashboard: React.FC = () => {
             <span>طلب جديد</span>
           </button>
           <button
+            onClick={() => navigate('/search-crafters')}
+            className="bg-amber-500 hover:bg-amber-600 text-white p-4 rounded-xl font-medium transition-colors flex flex-col items-center gap-2"
+          >
+            <Search className="w-6 h-6" />
+            <span>البحث عن حرفي</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <button
             onClick={() => navigate('/orders')}
             className="bg-gray-500 hover:bg-gray-600 text-white p-4 rounded-xl font-medium transition-colors flex flex-col items-center gap-2"
           >
             <Eye className="w-6 h-6" />
             <span>تصفح الطلبات</span>
           </button>
+          <button
+            onClick={() => navigate('/profile')}
+            className="bg-gray-500 hover:bg-gray-600 text-white p-4 rounded-xl font-medium transition-colors flex flex-col items-center gap-2"
+          >
+            <User className="w-6 h-6" />
+            <span>ملفي الشخصي</span>
+          </button>
         </div>
 
         {/* الحرفيون المتواصلون */}
         {connectedCrafters.length > 0 && (
           <div>
-            <h2 className="text-lg font-bold text-gray-800 mb-4">الحرفيون المتواصلون معك</h2>
+            <h2 className="text-lg font-bold text-gray-800 mb-4">الحرفيون الذين تواصلوا معي</h2>
             <div className="space-y-3">
               {connectedCrafters.map((crafter) => (
                 <div

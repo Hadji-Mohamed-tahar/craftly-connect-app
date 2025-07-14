@@ -109,11 +109,33 @@ const CrafterDashboard: React.FC = () => {
       </div>
 
       <div className="px-4 py-6 space-y-6">
-        {/* Subscription Status */}
+        {/* Membership Status */}
+        <div className="bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-xl p-4 mb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Shield className="w-6 h-6 text-gray-600" />
+              <div>
+                <h3 className="font-bold text-gray-800">عضوية مجانية</h3>
+                <p className="text-sm text-gray-600">
+                  الوصول المحدود للطلبات والخدمات الأساسية
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/subscription')}
+              className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+            >
+              <Crown className="w-4 h-4" />
+              ترقية العضوية
+            </button>
+          </div>
+        </div>
+
+        {/* Premium Subscription Status (if exists) */}
         {subscription && (
           <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-4">
             <div className="flex items-center gap-3">
-              <Shield className="w-6 h-6 text-amber-600" />
+              <Crown className="w-6 h-6 text-amber-600" />
               <div>
                 <h3 className="font-bold text-amber-800">{subscription.planName}</h3>
                 <p className="text-sm text-amber-600">

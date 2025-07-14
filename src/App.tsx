@@ -11,10 +11,12 @@ import CreateInquiry from "./pages/CreateInquiry";
 import Orders from "./pages/Orders";
 import OrderDetail from "./pages/OrderDetail";
 import CreateOrder from "./pages/CreateOrder";
+import CrafterSearchPage from "./pages/CrafterSearchPage";
 import Chat from "./pages/Chat";
 import RateOrder from "./pages/RateOrder";
 import Subscription from "./pages/Subscription";
 import Profile from "./pages/Profile";
+import EditProfile from "./pages/EditProfile";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import BottomNavigation from "./components/BottomNavigation";
@@ -54,10 +56,12 @@ const AppContent = () => {
           <Route path="/orders" element={<Orders />} />
           <Route path="/order/:id" element={<OrderDetail />} />
           <Route path="/create-order" element={<CreateOrder />} />
+          <Route path="/search-crafters" element={<CrafterSearchPage />} />
           <Route path="/chat/:orderId" element={<Chat />} />
           <Route path="/rate-order/:orderId" element={<RateOrder />} />
           <Route path="/subscription" element={<Subscription />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/edit-profile" element={<EditProfile />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
