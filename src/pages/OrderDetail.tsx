@@ -2,15 +2,17 @@
 import React, { useState } from 'react';
 import { ArrowLeft, MapPin, Clock, User, Phone, MessageCircle, CheckCircle, Star, AlertCircle, Package, Wrench } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useOrder } from '../contexts/OrderContext';
+import { useOrders } from '../contexts/FirebaseOrderContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const OrderDetail: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { orders, userType, openForDiscussion, updateOrderStatus, approveWorkStart } = useOrder();
+  const { orders, acceptOrder, startOrder, completeOrder } = useOrders();
+  const { userProfile, currentUser } = useAuth();
   const [isApplying, setIsApplying] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
-  const [isApproving, setIsApproving] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
   
   const order = orders.find(o => o.id === id);
 
@@ -31,45 +33,39 @@ const OrderDetail: React.FC = () => {
     );
   }
 
-  const handleApply = async () => {
-    setIsApplying(true);
-    setTimeout(() => {
-      openForDiscussion(order.id, 'crafter1', 'محمد النجار');
-      setIsApplying(false);
-      navigate('/');
-    }, 1000);
-  };
-
   const handleAcceptOrder = async () => {
-    setIsAccepting(true);
-    setTimeout(() => {
-      updateOrderStatus(order.id, 'waiting-client-approval', order.crafterId, order.crafterName);
+    try {
+      setIsAccepting(true);
+      await acceptOrder(order.id);
       setIsAccepting(false);
-    }, 1000);
+    } catch (error) {
+      console.error('Error accepting order:', error);
+      setIsAccepting(false);
+    }
   };
 
-  const handleApproveWork = async () => {
-    setIsApproving(true);
-    setTimeout(() => {
-      approveWorkStart(order.id);
-      setIsApproving(false);
-    }, 1000);
+  const handleStartOrder = async () => {
+    try {
+      setIsStarting(true);
+      await startOrder(order.id);
+      setIsStarting(false);
+    } catch (error) {
+      console.error('Error starting order:', error);
+      setIsStarting(false);
+    }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
         return 'bg-green-50 text-green-700 border-green-200';
-      case 'open-for-discussion':
-        return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'accepted':
-      case 'waiting-client-approval':
         return 'bg-yellow-50 text-yellow-700 border-yellow-200';
-      case 'in-progress':
+      case 'in_progress':
         return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'completed':
         return 'bg-green-50 text-green-700 border-green-200';
-      case 'rejected':
+      case 'cancelled':
         return 'bg-red-50 text-red-700 border-red-200';
       default:
         return 'bg-gray-50 text-gray-700 border-gray-200';
@@ -80,29 +76,25 @@ const OrderDetail: React.FC = () => {
     switch (status) {
       case 'pending':
         return 'متاح للتقديم';
-      case 'open-for-discussion':
-        return 'جاري النقاش';
       case 'accepted':
         return 'تم القبول';
-      case 'waiting-client-approval':
-        return 'انتظار موافقة العميل';
-      case 'in-progress':
+      case 'in_progress':
         return 'قيد التنفيذ';
       case 'completed':
         return 'مكتمل';
-      case 'rejected':
-        return 'مرفوض';
+      case 'cancelled':
+        return 'ملغي';
       default:
         return status;
     }
   };
 
-  const isMyOrder = userType === 'client' && order.clientName;
-  const canApply = userType === 'crafter' && order.status === 'pending';
-  const canAccept = userType === 'crafter' && order.status === 'open-for-discussion' && order.crafterId === 'crafter1';
-  const canApprove = userType === 'client' && order.status === 'waiting-client-approval';
-  const canChat = (order.status === 'open-for-discussion' || order.status === 'waiting-client-approval' || order.status === 'in-progress') && 
-                  ((userType === 'client' && isMyOrder) || (userType === 'crafter' && order.crafterId === 'crafter1'));
+  const userType = userProfile?.userType;
+  const isMyOrder = userType === 'client' && order.clientId === currentUser?.uid;
+  const canAcceptOrder = userType === 'crafter' && order.status === 'pending';
+  const canStartOrder = userType === 'crafter' && order.status === 'accepted' && order.crafterId === currentUser?.uid;
+  const canChat = order.status === 'in_progress' && 
+                  ((userType === 'client' && isMyOrder) || (userType === 'crafter' && order.crafterId === currentUser?.uid));
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -158,29 +150,8 @@ const OrderDetail: React.FC = () => {
 
           {/* Action Buttons */}
           <div className="space-y-3">
-            {/* Apply Button for Crafters */}
-            {canApply && (
-              <button
-                onClick={handleApply}
-                disabled={isApplying}
-                className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-              >
-                {isApplying ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    جاري التقديم...
-                  </>
-                ) : (
-                  <>
-                    <Wrench className="w-5 h-5" />
-                    تقديم على الطلب
-                  </>
-                )}
-              </button>
-            )}
-
             {/* Accept Button for Crafters */}
-            {canAccept && (
+            {canAcceptOrder && (
               <button
                 onClick={handleAcceptOrder}
                 disabled={isAccepting}
@@ -200,36 +171,25 @@ const OrderDetail: React.FC = () => {
               </button>
             )}
 
-            {/* Approval Button for Clients */}
-            {canApprove && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-yellow-800 mb-1">موافقة مطلوبة</h3>
-                    <p className="text-yellow-700 text-sm mb-3">
-                      الحرفي {order.crafterName} جاهز لبدء العمل. هل توافق على البدء؟
-                    </p>
-                    <button
-                      onClick={handleApproveWork}
-                      disabled={isApproving}
-                      className="bg-yellow-500 hover:bg-yellow-600 disabled:bg-yellow-300 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
-                    >
-                      {isApproving ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          جاري الموافقة...
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle className="w-4 h-4" />
-                          موافقة على البدء
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
+            {/* Start Button for Crafters */}
+            {canStartOrder && (
+              <button
+                onClick={handleStartOrder}
+                disabled={isStarting}
+                className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+              >
+                {isStarting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    جاري بدء العمل...
+                  </>
+                ) : (
+                  <>
+                    <Wrench className="w-5 h-5" />
+                    بدء العمل
+                  </>
+                )}
+              </button>
             )}
 
             {/* Chat Button */}
@@ -240,9 +200,6 @@ const OrderDetail: React.FC = () => {
               >
                 <MessageCircle className="w-5 h-5" />
                 فتح المحادثة
-                {order.hasUnreadMessages && (
-                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                )}
               </button>
             )}
           </div>

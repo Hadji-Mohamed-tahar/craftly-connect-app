@@ -2,25 +2,27 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Crown, Shield, Package, Clock, MessageCircle, Star, Eye, User, Settings, Plus } from 'lucide-react';
-import { useOrder } from '../contexts/OrderContext';
+import { useOrders } from '../contexts/FirebaseOrderContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const CrafterDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { orders, hasActiveSubscription, subscription, setUserType } = useOrder();
-  const [activeFilter, setActiveFilter] = useState<'all' | 'discussion' | 'active' | 'completed'>('all');
+  const { orders, hasActiveSubscription, subscription } = useOrders();
+  const { currentUser, logout } = useAuth();
+  const [activeFilter, setActiveFilter] = useState<'all' | 'accepted' | 'active' | 'completed'>('all');
 
   // الطلبات التي قدم عليها الحرفي (مرتبطة بـ crafterId)
   const crafterOrders = orders.filter(order => 
-    order.crafterId === 'currentCrafter' && 
-    ['open-for-discussion', 'accepted', 'waiting-client-approval', 'in-progress', 'completed'].includes(order.status)
+    order.crafterId === currentUser?.uid && 
+    ['accepted', 'in_progress', 'completed'].includes(order.status)
   );
 
   const filteredOrders = crafterOrders.filter(order => {
     switch (activeFilter) {
-      case 'discussion':
-        return order.status === 'open-for-discussion';
+      case 'accepted':
+        return order.status === 'accepted';
       case 'active':
-        return ['accepted', 'waiting-client-approval', 'in-progress'].includes(order.status);
+        return order.status === 'in_progress';
       case 'completed':
         return order.status === 'completed';
       default:
@@ -30,22 +32,22 @@ const CrafterDashboard: React.FC = () => {
 
   // إحصائيات الحرفي
   const crafterStats = {
-    totalOrders: orders.filter(o => o.crafterId === 'currentCrafter' && o.status === 'completed').length,
-    activeOrders: orders.filter(o => o.crafterId === 'currentCrafter' && ['open-for-discussion', 'accepted', 'waiting-client-approval', 'in-progress'].includes(o.status)).length,
-    averageRating: orders.filter(o => o.crafterId === 'currentCrafter' && o.rating).reduce((acc, o) => acc + (o.rating || 0), 0) / orders.filter(o => o.crafterId === 'currentCrafter' && o.rating).length || 0,
+    totalOrders: orders.filter(o => o.crafterId === currentUser?.uid && o.status === 'completed').length,
+    activeOrders: orders.filter(o => o.crafterId === currentUser?.uid && ['accepted', 'in_progress'].includes(o.status)).length,
+    averageRating: orders.filter(o => o.crafterId === currentUser?.uid && o.rating).reduce((acc, o) => acc + (o.rating || 0), 0) / orders.filter(o => o.crafterId === currentUser?.uid && o.rating).length || 0,
     pendingOrders: orders.filter(o => o.status === 'pending').length
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'open-for-discussion':
-        return 'bg-blue-50 text-blue-700 border-blue-200';
-      case 'waiting-client-approval':
+      case 'accepted':
         return 'bg-yellow-50 text-yellow-700 border-yellow-200';
-      case 'in-progress':
+      case 'in_progress':
         return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'completed':
         return 'bg-green-50 text-green-700 border-green-200';
+      case 'pending':
+        return 'bg-gray-50 text-gray-700 border-gray-200';
       default:
         return 'bg-gray-50 text-gray-700 border-gray-200';
     }
@@ -53,14 +55,14 @@ const CrafterDashboard: React.FC = () => {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'open-for-discussion':
-        return 'جاري النقاش';
-      case 'waiting-client-approval':
-        return 'انتظار موافقة العميل';
-      case 'in-progress':
+      case 'accepted':
+        return 'مقبول';
+      case 'in_progress':
         return 'قيد التنفيذ';
       case 'completed':
         return 'مكتمل';
+      case 'pending':
+        return 'معلق';
       default:
         return status;
     }
@@ -96,10 +98,10 @@ const CrafterDashboard: React.FC = () => {
                 <Settings className="w-5 h-5 text-gray-600" />
               </button>
               <button
-                onClick={() => setUserType(null)}
+                onClick={() => logout()}
                 className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg text-sm transition-colors"
               >
-                تغيير
+                خروج
               </button>
             </div>
           </div>
@@ -191,8 +193,8 @@ const CrafterDashboard: React.FC = () => {
           <div className="flex space-x-2 space-x-reverse overflow-x-auto pb-2 mb-4">
             {[
               { key: 'all', label: 'جميع طلباتك' },
-              { key: 'discussion', label: 'جاري النقاش' },
-              { key: 'active', label: 'طلبات نشطة' },
+              { key: 'accepted', label: 'مقبولة' },
+              { key: 'active', label: 'قيد التنفيذ' },
               { key: 'completed', label: 'مكتملة' }
             ].map((filter) => (
               <button
@@ -249,15 +251,13 @@ const CrafterDashboard: React.FC = () => {
                     عرض التفاصيل
                   </button>
                   
-                  {(order.status === 'open-for-discussion' || order.status === 'waiting-client-approval' || order.status === 'in-progress') && (
+                  {(order.status === 'accepted' || order.status === 'in_progress') && (
                     <button
                       onClick={() => navigate(`/chat/${order.id}`)}
                       className="px-4 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
                     >
                       <MessageCircle className="w-4 h-4" />
-                      {order.hasUnreadMessages && (
-                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                      )}
+                      <span>محادثة</span>
                     </button>
                   )}
                 </div>

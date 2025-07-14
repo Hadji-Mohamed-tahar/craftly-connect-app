@@ -1,17 +1,24 @@
-
 import React, { useState } from 'react';
 import { ArrowLeft, Send, Phone, Video, MoreVertical, CheckCircle, Package } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useOrder } from '../contexts/OrderContext';
+import { useOrders } from '../contexts/FirebaseOrderContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const Chat: React.FC = () => {
   const navigate = useNavigate();
   const { orderId } = useParams();
-  const { orders, messages, addMessage, updateOrderStatus, userType } = useOrder();
+  const { orders, completeOrder } = useOrders();
+  const { userProfile, currentUser } = useAuth();
   const [newMessage, setNewMessage] = useState('');
+  const [messages, setMessages] = useState<Array<{
+    id: string;
+    content: string;
+    senderId: string;
+    timestamp: string;
+    isOwn: boolean;
+  }>>([]);
   
   const order = orders.find(o => o.id === orderId);
-  const orderMessages = messages.filter(m => m.orderId === orderId);
 
   if (!order) {
     return (
@@ -32,21 +39,25 @@ const Chat: React.FC = () => {
 
   const handleSendMessage = () => {
     if (newMessage.trim()) {
-      addMessage({
-        orderId: order.id,
-        senderId: userType === 'client' ? 'client1' : 'crafter1',
-        senderName: userType === 'client' ? order.clientName : order.crafterName || 'الحرفي',
+      const newMsg = {
+        id: Date.now().toString(),
         content: newMessage.trim(),
-        status: 'sent',
-        type: 'text'
-      });
+        senderId: currentUser?.uid || '',
+        timestamp: new Date().toISOString(),
+        isOwn: true
+      };
+      setMessages(prev => [...prev, newMsg]);
       setNewMessage('');
     }
   };
 
-  const handleCompleteOrder = () => {
-    updateOrderStatus(order.id, 'completed', order.crafterId, order.crafterName);
-    navigate(`/rate-order/${order.id}`);
+  const handleCompleteOrder = async () => {
+    try {
+      await completeOrder(order.id);
+      navigate(`/rate-order/${order.id}`);
+    } catch (error) {
+      console.error('Error completing order:', error);
+    }
   };
 
   const formatTimeAgo = (timestamp: string) => {
@@ -61,7 +72,7 @@ const Chat: React.FC = () => {
     return `قبل ${Math.floor(diffInHours / 24)} يوم`;
   };
 
-  const otherPersonName = userType === 'client' ? order.crafterName : order.clientName;
+  const otherPersonName = userProfile?.userType === 'client' ? order.crafterName : order.clientName;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -77,7 +88,7 @@ const Chat: React.FC = () => {
                 <ArrowLeft className="w-5 h-5 text-gray-600" />
               </button>
               <div>
-                <h1 className="font-bold text-gray-800">{otherPersonName}</h1>
+                <h1 className="font-bold text-gray-800">{otherPersonName || 'المحادثة'}</h1>
                 <p className="text-sm text-gray-500">{order.title}</p>
               </div>
             </div>
@@ -102,9 +113,9 @@ const Chat: React.FC = () => {
           <div className="flex items-center gap-2">
             <Package className="w-4 h-4 text-blue-600" />
             <span className="text-sm text-blue-800 font-medium">
-              {order.status === 'open-for-discussion' && 'جاري مناقشة التفاصيل'}
-              {order.status === 'waiting-client-approval' && 'في انتظار موافقة العميل'}
-              {order.status === 'in-progress' && 'العمل قيد التنفيذ'}
+              {order.status === 'accepted' && 'تم قبول الطلب'}
+              {order.status === 'in_progress' && 'العمل قيد التنفيذ'}
+              {order.status === 'completed' && 'تم إنجاز العمل'}
             </span>
           </div>
           <span className="text-sm text-blue-600 font-bold">{order.price} ر.س</span>
@@ -113,40 +124,33 @@ const Chat: React.FC = () => {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {orderMessages.length === 0 ? (
+        {messages.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-4xl mb-4">💬</div>
             <h3 className="text-lg font-medium text-gray-600 mb-2">ابدأ المحادثة</h3>
             <p className="text-gray-500">اكتب رسالتك الأولى لبدء النقاش حول التفاصيل</p>
           </div>
         ) : (
-          orderMessages.map((message) => {
-            const isMyMessage = (userType === 'client' && message.senderId === 'client1') || 
-                              (userType === 'crafter' && message.senderId === 'crafter1');
-            
+          messages.map((message) => {
             return (
               <div
                 key={message.id}
-                className={`flex ${isMyMessage ? 'justify-end' : 'justify-start'}`}
+                className={`flex ${message.isOwn ? 'justify-end' : 'justify-start'}`}
               >
                 <div
                   className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                    isMyMessage
+                    message.isOwn
                       ? 'bg-blue-500 text-white'
                       : 'bg-white text-gray-800 shadow-sm'
                   }`}
                 >
                   <p className="text-sm">{message.content}</p>
                   <div className={`flex items-center justify-between mt-1 ${
-                    isMyMessage ? 'text-blue-100' : 'text-gray-500'
+                    message.isOwn ? 'text-blue-100' : 'text-gray-500'
                   }`}>
                     <span className="text-xs">{formatTimeAgo(message.timestamp)}</span>
-                    {isMyMessage && (
-                      <div className="text-xs">
-                        {message.status === 'sent' && '✓'}
-                        {message.status === 'delivered' && '✓✓'}
-                        {message.status === 'read' && <span className="text-blue-200">✓✓</span>}
-                      </div>
+                    {message.isOwn && (
+                      <div className="text-xs">✓</div>
                     )}
                   </div>
                 </div>
@@ -157,7 +161,7 @@ const Chat: React.FC = () => {
       </div>
 
       {/* Complete Order Button (for clients when work is in progress) */}
-      {userType === 'client' && order.status === 'in-progress' && (
+      {userProfile?.userType === 'client' && order.status === 'in_progress' && (
         <div className="bg-green-50 border-t border-green-200 px-4 py-3">
           <button
             onClick={handleCompleteOrder}
