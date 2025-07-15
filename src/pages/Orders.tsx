@@ -1,15 +1,18 @@
 
 import React, { useState } from 'react';
-import { ArrowLeft, Plus, Package, Clock, CheckCircle, Star, MessageCircle, Eye, Crown, AlertCircle, User, Wrench } from 'lucide-react';
+import { ArrowLeft, Plus, Package, Clock, CheckCircle, Star, MessageCircle, Eye, Crown, AlertCircle, User, Wrench, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useOrders } from '../contexts/FirebaseOrderContext';
 import { useAuth } from '../contexts/AuthContext';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
+import { Button } from '../components/ui/button';
 
 const Orders: React.FC = () => {
   const navigate = useNavigate();
   const { orders, hasActiveSubscription } = useOrders();
   const { userProfile } = useAuth();
   const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'in-progress' | 'completed'>('all');
+  const [showClientModal, setShowClientModal] = useState(false);
 
   const userType = userProfile?.userType || 'client';
 
@@ -82,8 +85,7 @@ const Orders: React.FC = () => {
 
   const handleOrderClick = (orderId: string) => {
     if (userType === 'client') {
-      // عرض تنبيه للعميل
-      alert('يجب التسجيل كحرفي للتقديم على الطلبات');
+      setShowClientModal(true);
       return;
     }
     // السماح للحرفي بعرض التفاصيل
@@ -125,23 +127,6 @@ const Orders: React.FC = () => {
         </div>
       )}
 
-      {/* Subscription Notice for Crafters */}
-      {userType === 'crafter' && !hasActiveSubscription() && (
-        <div className="bg-amber-50 border border-amber-200 mx-4 mt-4 p-4 rounded-xl">
-          <div className="text-center">
-            <Crown className="w-8 h-8 text-amber-500 mx-auto mb-2" />
-            <p className="text-amber-800 text-sm mb-3">
-              اشترك الآن لعرض تفاصيل الطلبات والتقديم عليها
-            </p>
-            <button
-              onClick={() => navigate('/subscription')}
-              className="bg-amber-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors"
-            >
-              عرض خطط الاشتراك
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Filters */}
       <div className="px-3 sm:px-4 py-3">
@@ -203,10 +188,10 @@ const Orders: React.FC = () => {
             {/* Price */}
             <div className="flex items-center justify-between">
               <div className="text-lg sm:text-xl font-bold text-green-600">
-                {order.price} ر.س
+                {order.price} د.ج
               </div>
               
-              {userType === 'crafter' && hasActiveSubscription() && (
+              {userType === 'crafter' && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -214,8 +199,7 @@ const Orders: React.FC = () => {
                   }}
                   className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
                 >
-                  <Eye className="w-4 h-4" />
-                  عرض التفاصيل
+                  👁️ عرض التفاصيل
                 </button>
               )}
             </div>
@@ -233,6 +217,29 @@ const Orders: React.FC = () => {
           </p>
         </div>
       )}
+
+      {/* Client Modal */}
+      <Dialog open={showClientModal} onOpenChange={setShowClientModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2 mb-2">
+              <AlertCircle className="w-6 h-6 text-blue-600" />
+              <DialogTitle>معلومة مهمة</DialogTitle>
+            </div>
+            <DialogDescription>
+              يجب التسجيل كحرفي للتقديم على الطلبات. هذه الطلبات متاحة للحرفيين المسجلين فقط.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              onClick={() => setShowClientModal(false)}
+              className="w-full"
+            >
+              فهمت
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

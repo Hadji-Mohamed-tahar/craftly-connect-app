@@ -1,9 +1,11 @@
 
 import React, { useState } from 'react';
-import { ArrowLeft, MapPin, Clock, User, Phone, MessageCircle, CheckCircle, Star, AlertCircle, Package, Wrench } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, User, Phone, MessageCircle, CheckCircle, Star, AlertCircle, Package, Wrench, X } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useOrders } from '../contexts/FirebaseOrderContext';
 import { useAuth } from '../contexts/AuthContext';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
+import { Button } from '../components/ui/button';
 
 const OrderDetail: React.FC = () => {
   const navigate = useNavigate();
@@ -13,6 +15,9 @@ const OrderDetail: React.FC = () => {
   const [isApplying, setIsApplying] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
   
   const order = orders.find(o => o.id === id);
 
@@ -126,7 +131,7 @@ const OrderDetail: React.FC = () => {
               </div>
             </div>
             <div className="text-3xl font-bold text-green-600">
-              {order.price} ر.س
+              {order.price} د.ج
             </div>
           </div>
 
@@ -150,46 +155,66 @@ const OrderDetail: React.FC = () => {
 
           {/* Action Buttons */}
           <div className="space-y-3">
-            {/* Accept Button for Crafters */}
+            {/* Accept and Reject Buttons for Crafters */}
             {canAcceptOrder && (
-              <button
-                onClick={handleAcceptOrder}
-                disabled={isAccepting}
-                className="w-full bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-              >
-                {isAccepting ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    جاري القبول...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="w-5 h-5" />
-                    قبول الطلب
-                  </>
-                )}
-              </button>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={handleAcceptOrder}
+                  disabled={isAccepting}
+                  className="bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  {isAccepting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      جاري القبول...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-5 h-5" />
+                      قبول
+                    </>
+                  )}
+                </button>
+                
+                <button
+                  onClick={() => setShowRejectModal(true)}
+                  className="bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  <X className="w-5 h-5" />
+                  رفض
+                </button>
+              </div>
             )}
 
-            {/* Start Button for Crafters */}
+            {/* Start and Cancel Buttons for Crafters */}
             {canStartOrder && (
-              <button
-                onClick={handleStartOrder}
-                disabled={isStarting}
-                className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-              >
-                {isStarting ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    جاري بدء العمل...
-                  </>
-                ) : (
-                  <>
-                    <Wrench className="w-5 h-5" />
-                    بدء العمل
-                  </>
-                )}
-              </button>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={handleStartOrder}
+                  disabled={isStarting}
+                  className="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  {isStarting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      جاري بدء العمل...
+                    </>
+                  ) : (
+                    <>
+                      <Wrench className="w-5 h-5" />
+                      بدء العمل
+                    </>
+                  )}
+                </button>
+                
+                <button
+                  onClick={() => setShowCancelModal(true)}
+                  className="bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  <X className="w-5 h-5" />
+                  إلغاء
+                </button>
+              </div>
             )}
 
             {/* Chat Button */}
@@ -267,6 +292,86 @@ const OrderDetail: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Reject Modal */}
+      <Dialog open={showRejectModal} onOpenChange={setShowRejectModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2 mb-2">
+              <X className="w-6 h-6 text-red-600" />
+              <DialogTitle>رفض الطلب</DialogTitle>
+            </div>
+            <DialogDescription>
+              هل أنت متأكد من رفض هذا الطلب؟ لن تتمكن من التراجع عن هذا القرار.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button 
+              variant="outline"
+              onClick={() => setShowRejectModal(false)}
+            >
+              إلغاء
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={() => {
+                setShowRejectModal(false);
+                // Add reject logic here
+              }}
+            >
+              رفض الطلب
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Modal */}
+      <Dialog open={showCancelModal} onOpenChange={setShowCancelModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2 mb-2">
+              <AlertCircle className="w-6 h-6 text-orange-600" />
+              <DialogTitle>إلغاء الطلب</DialogTitle>
+            </div>
+            <DialogDescription>
+              يرجى توضيح سبب إلغاء الطلب:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="اكتب سبب الإلغاء..."
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              rows={3}
+            />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button 
+              variant="outline"
+              onClick={() => {
+                setShowCancelModal(false);
+                setCancelReason('');
+              }}
+            >
+              إلغاء
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={() => {
+                if (cancelReason.trim()) {
+                  setShowCancelModal(false);
+                  setCancelReason('');
+                  // Add cancel logic here
+                }
+              }}
+              disabled={!cancelReason.trim()}
+            >
+              إلغاء الطلب
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

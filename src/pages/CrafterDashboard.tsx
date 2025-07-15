@@ -30,12 +30,15 @@ const CrafterDashboard: React.FC = () => {
     }
   });
 
+  // الطلبات المتاحة (للتقديم عليها)
+  const availableOrders = orders.filter(order => order.status === 'pending');
+
   // إحصائيات الحرفي
   const crafterStats = {
     totalOrders: orders.filter(o => o.crafterId === currentUser?.uid && o.status === 'completed').length,
     activeOrders: orders.filter(o => o.crafterId === currentUser?.uid && ['accepted', 'in_progress'].includes(o.status)).length,
     averageRating: orders.filter(o => o.crafterId === currentUser?.uid && o.rating).reduce((acc, o) => acc + (o.rating || 0), 0) / orders.filter(o => o.crafterId === currentUser?.uid && o.rating).length || 0,
-    pendingOrders: orders.filter(o => o.status === 'pending').length
+    pendingOrders: availableOrders.length
   };
 
   const getStatusColor = (status: string) => {
@@ -86,12 +89,6 @@ const CrafterDashboard: React.FC = () => {
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => navigate('/subscription')}
-                className="p-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors"
-              >
-                <Crown className="w-5 h-5" />
-              </button>
-              <button
                 onClick={() => navigate('/settings')}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
@@ -109,58 +106,26 @@ const CrafterDashboard: React.FC = () => {
       </div>
 
       <div className="px-4 py-6 space-y-6">
-        {/* Membership Status */}
-        <div className="bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-xl p-4 mb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Shield className="w-6 h-6 text-gray-600" />
-              <div>
-                <h3 className="font-bold text-gray-800">عضوية مجانية</h3>
-                <p className="text-sm text-gray-600">
-                  الوصول المحدود للطلبات والخدمات الأساسية
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => navigate('/subscription')}
-              className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
-            >
-              <Crown className="w-4 h-4" />
-              ترقية العضوية
-            </button>
-          </div>
-        </div>
-
-        {/* Premium Subscription Status (if exists) */}
-        {subscription && (
-          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-4">
-            <div className="flex items-center gap-3">
-              <Crown className="w-6 h-6 text-amber-600" />
-              <div>
-                <h3 className="font-bold text-amber-800">{subscription.planName}</h3>
-                <p className="text-sm text-amber-600">
-                  صالح حتى: {new Date(subscription.endDate).toLocaleDateString('ar-SA')}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="relative">
+            <button
+              onClick={() => navigate('/orders')}
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-xl font-medium transition-colors flex flex-col items-center gap-2"
+            >
+              👁️ <span>تصفح الطلبات</span>
+            </button>
+            {/* Red dot for new orders */}
+            {availableOrders.length > 0 && (
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
+            )}
+          </div>
           <button
-            onClick={() => navigate('/orders')}
-            className="bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-xl font-medium transition-colors flex flex-col items-center gap-2"
+            onClick={() => navigate('/profile')}
+            className="bg-gray-500 hover:bg-gray-600 text-white p-4 rounded-xl font-medium transition-colors flex flex-col items-center gap-2"
           >
-            <Plus className="w-6 h-6" />
-            <span>تصفح الطلبات</span>
-          </button>
-          <button
-            onClick={() => navigate('/subscription')}
-            className="bg-amber-500 hover:bg-amber-600 text-white p-4 rounded-xl font-medium transition-colors flex flex-col items-center gap-2"
-          >
-            <Crown className="w-6 h-6" />
-            <span>العضوية</span>
+            <User className="w-6 h-6" />
+            <span>ملفي الشخصي</span>
           </button>
         </div>
 
@@ -188,24 +153,6 @@ const CrafterDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Subscription Notice */}
-        {!hasActiveSubscription() && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-            <div className="text-center">
-              <Crown className="w-12 h-12 text-amber-500 mx-auto mb-3" />
-              <h3 className="font-bold text-amber-800 mb-2">اشترك الآن لعرض تفاصيل الطلبات</h3>
-              <p className="text-amber-700 text-sm mb-4">
-                احصل على إمكانية عرض تفاصيل الطلبات والتفاعل مع العملاء
-              </p>
-              <button
-                onClick={() => navigate('/subscription')}
-                className="bg-amber-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-amber-600 transition-colors"
-              >
-                عرض خطط الاشتراك
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* الطلبات التي قدمت عليها */}
         <div>
@@ -255,7 +202,7 @@ const CrafterDashboard: React.FC = () => {
                     <span className="bg-gray-100 px-2 py-1 rounded-lg">{order.category}</span>
                     <span>{new Date(order.createdAt).toLocaleDateString('ar-SA')}</span>
                   </div>
-                  <div className="text-lg font-bold text-blue-600">{order.price} ر.س</div>
+                  <div className="text-lg font-bold text-blue-600">{order.price} د.ج</div>
                 </div>
 
                 {order.clientName && (

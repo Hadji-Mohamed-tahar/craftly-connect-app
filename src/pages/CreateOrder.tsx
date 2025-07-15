@@ -1,15 +1,20 @@
 
 import React, { useState } from 'react';
-import { ArrowLeft, Plus, MapPin } from 'lucide-react';
+import { ArrowLeft, Plus, MapPin, CheckCircle, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useOrders } from '../contexts/FirebaseOrderContext';
 import { useAuth } from '../contexts/AuthContext';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
+import { Button } from '../components/ui/button';
 
 const CreateOrder: React.FC = () => {
   const navigate = useNavigate();
   const { createOrder } = useOrders();
   const { userProfile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   
   const [formData, setFormData] = useState({
     title: '',
@@ -35,7 +40,8 @@ const CreateOrder: React.FC = () => {
     e.preventDefault();
     
     if (!userProfile) {
-      alert('يجب تسجيل الدخول أولاً');
+      setErrorMessage('يجب تسجيل الدخول أولاً');
+      setShowErrorModal(true);
       return;
     }
 
@@ -44,7 +50,8 @@ const CreateOrder: React.FC = () => {
     // Validation
     if (!formData.title || !formData.description || !formData.category || 
         !formData.price || !formData.clientLocation) {
-      alert('يرجى ملء جميع الحقول');
+      setErrorMessage('يرجى ملء جميع الحقول');
+      setShowErrorModal(true);
       setIsSubmitting(false);
       return;
     }
@@ -59,11 +66,11 @@ const CreateOrder: React.FC = () => {
         clientLocation: formData.clientLocation
       });
 
-      alert('تم إنشاء الطلب بنجاح!');
-      navigate('/');
+      setShowSuccessModal(true);
     } catch (error) {
       console.error('Error creating order:', error);
-      alert('حدث خطأ أثناء إنشاء الطلب');
+      setErrorMessage('حدث خطأ أثناء إنشاء الطلب');
+      setShowErrorModal(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -183,7 +190,7 @@ const CreateOrder: React.FC = () => {
                     required
                   />
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                    ر.س
+                    د.ج
                   </div>
                 </div>
               </div>
@@ -228,6 +235,55 @@ const CreateOrder: React.FC = () => {
           </button>
         </form>
       </div>
+
+      {/* Success Modal */}
+      <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2 mb-2">
+              <CheckCircle className="w-6 h-6 text-green-600" />
+              <DialogTitle>تم بنجاح!</DialogTitle>
+            </div>
+            <DialogDescription>
+              تم إنشاء الطلب بنجاح وسيتم عرضه للحرفيين المتاحين.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              onClick={() => {
+                setShowSuccessModal(false);
+                navigate('/');
+              }}
+              className="w-full"
+            >
+              العودة للرئيسية
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Error Modal */}
+      <Dialog open={showErrorModal} onOpenChange={setShowErrorModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2 mb-2">
+              <AlertCircle className="w-6 h-6 text-red-600" />
+              <DialogTitle>خطأ</DialogTitle>
+            </div>
+            <DialogDescription>
+              {errorMessage}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              onClick={() => setShowErrorModal(false)}
+              className="w-full"
+            >
+              حسناً
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

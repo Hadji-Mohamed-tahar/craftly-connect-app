@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ArrowLeft, User, Phone, MapPin, Star, Calendar, Package, Crown, Settings, Edit } from 'lucide-react';
+import { ArrowLeft, User, Phone, MapPin, Star, Calendar, Package, Crown, Settings, Edit, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useOrders } from '../contexts/FirebaseOrderContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -136,7 +136,7 @@ const Profile: React.FC = () => {
                     <p className="text-sm text-gray-600">{order.category}</p>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg font-bold text-green-600">{order.price} ر.س</div>
+                    <div className="text-lg font-bold text-green-600">{order.price} د.ج</div>
                     <div className="text-sm text-gray-500">
                       {new Date(order.createdAt).toLocaleDateString('ar-SA')}
                     </div>
@@ -151,6 +151,49 @@ const Profile: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Membership Section for Crafters */}
+        {userProfile?.userType === 'crafter' && (
+          <div className="bg-white rounded-xl p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">العضوية</h3>
+            
+            {/* Free Membership */}
+            <div className="bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-xl p-4 mb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Shield className="w-6 h-6 text-gray-600" />
+                  <div>
+                    <h4 className="font-bold text-gray-800">عضوية مجانية</h4>
+                    <p className="text-sm text-gray-600">
+                      الوصول الكامل للطلبات والخدمات الأساسية
+                    </p>
+                  </div>
+                </div>
+                <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
+                  نشطة
+                </div>
+              </div>
+            </div>
+
+            {/* Premium Placeholder */}
+            <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-4 opacity-60">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Crown className="w-6 h-6 text-amber-600" />
+                  <div>
+                    <h4 className="font-bold text-amber-800">عضوية مميزة</h4>
+                    <p className="text-sm text-amber-600">
+                      ميزات إضافية وأولوية في الطلبات
+                    </p>
+                  </div>
+                </div>
+                <div className="bg-gray-100 text-gray-500 px-3 py-1 rounded-full text-sm font-medium">
+                  قريباً
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

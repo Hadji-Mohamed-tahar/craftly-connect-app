@@ -112,20 +112,13 @@ const ClientDashboard: React.FC = () => {
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <button
             onClick={() => navigate('/orders')}
             className="bg-gray-500 hover:bg-gray-600 text-white p-4 rounded-xl font-medium transition-colors flex flex-col items-center gap-2"
           >
             <Eye className="w-6 h-6" />
             <span>تصفح الطلبات</span>
-          </button>
-          <button
-            onClick={() => navigate('/profile')}
-            className="bg-gray-500 hover:bg-gray-600 text-white p-4 rounded-xl font-medium transition-colors flex flex-col items-center gap-2"
-          >
-            <User className="w-6 h-6" />
-            <span>ملفي الشخصي</span>
           </button>
         </div>
 
@@ -216,7 +209,7 @@ const ClientDashboard: React.FC = () => {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-bold text-blue-600">{order.price} ر.س</span>
+                  <span className="text-lg font-bold text-blue-600">{order.price} د.ج</span>
                   <button
                     onClick={() => navigate(`/order/${order.id}`)}
                     className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm transition-colors"
