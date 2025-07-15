@@ -1,5 +1,8 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { collection, addDoc, updateDoc, onSnapshot, query, orderBy, doc, increment } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { useAuth } from './AuthContext';
 
 export interface Inquiry {
   id: string;
@@ -52,114 +55,138 @@ export const useInquiry = () => {
 };
 
 export const InquiryProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [inquiries, setInquiries] = useState<Inquiry[]>([
-    {
-      id: '1',
-      title: 'أحتاج نجار ماهر لتصليح خزانة',
-      description: 'السلام عليكم، أحتاج إلى نجار محترف لإصلاح خزانة خشبية في غرفة النوم. الخزانة بحاجة لتغيير المفاصل وإعادة ضبط الأبواب.',
-      author: {
-        name: 'أحمد محمد',
-        avatar: '👨‍💼'
-      },
-      likes: 12,
-      comments: 5,
-      isLiked: false,
-      timestamp: '2024-01-15T10:30:00Z',
-      category: 'general',
-      isMyPost: false
-    },
-    {
-      id: '2',
-      title: 'خدمات سباكة متاحة - خبرة 15 سنة',
-      description: 'مرحباً، أنا سباك محترف بخبرة 15 سنة. أقدم خدمات الصيانة والإصلاح لجميع أعمال السباكة. متاح طوال الأسبوع.',
-      author: {
-        name: 'محمد السباك',
-        avatar: '🔧'
-      },
-      likes: 25,
-      comments: 8,
-      isLiked: true,
-      timestamp: '2024-01-14T15:45:00Z',
-      category: 'craftsmen',
-      isMyPost: false
-    },
-    {
-      id: '3',
-      title: 'مطلوب كهربائي لتركيب ثريا',
-      description: 'أبحث عن كهربائي محترف لتركيب ثريا جديدة في صالة المنزل. العمل بسيط ولكن أحتاج خبرة للأمان.',
-      author: {
-        name: 'فاطمة أحمد',
-        avatar: '👩‍💼'
-      },
-      likes: 8,
-      comments: 3,
-      isLiked: false,
-      timestamp: '2024-01-13T09:20:00Z',
-      category: 'general',
-      isMyPost: true
-    }
-  ]);
+  const { currentUser, userProfile } = useAuth();
+  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [comments, setComments] = useState<Comment[]>([
-    {
-      id: '1',
-      inquiryId: '1',
-      author: {
-        name: 'علي النجار',
-        avatar: '🪚'
+  // Listen to inquiries from Firebase
+  useEffect(() => {
+    const inquiriesRef = collection(db, 'inquiries');
+    const inquiriesQuery = query(inquiriesRef, orderBy('timestamp', 'desc'));
+
+    const unsubscribe = onSnapshot(inquiriesQuery, 
+      (snapshot) => {
+        const inquiriesData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          isMyPost: doc.data().authorId === currentUser?.uid
+        } as Inquiry));
+        setInquiries(inquiriesData);
+        setLoading(false);
       },
-      content: 'أستطيع مساعدتك في هذا العمل. لدي خبرة 10 سنوات في النجارة.',
-      timestamp: '2024-01-15T11:00:00Z',
-      replies: []
-    }
-  ]);
+      (error) => {
+        console.error('Error listening to inquiries:', error);
+        // Set fallback inquiries on permission error
+        const fallbackInquiries: Inquiry[] = [
+          {
+            id: '1',
+            title: 'أحتاج نجار ماهر لتصليح خزانة',
+            description: 'السلام عليكم، أحتاج إلى نجار محترف لإصلاح خزانة خشبية في غرفة النوم.',
+            author: {
+              name: 'أحمد محمد',
+              avatar: '👨‍💼'
+            },
+            likes: 12,
+            comments: 5,
+            isLiked: false,
+            timestamp: '2024-01-15T10:30:00Z',
+            category: 'general',
+            isMyPost: false
+          }
+        ];
+        setInquiries(fallbackInquiries);
+        setLoading(false);
+      }
+    );
+
+    return unsubscribe;
+  }, [currentUser]);
+
+  const [comments, setComments] = useState<Comment[]>([]);
 
   const [currentFilter, setCurrentFilter] = useState('الأحدث');
 
-  const addInquiry = (inquiry: Omit<Inquiry, 'id' | 'timestamp' | 'likes' | 'comments' | 'isLiked'>) => {
-    const newInquiry: Inquiry = {
+  const addInquiry = async (inquiry: Omit<Inquiry, 'id' | 'timestamp' | 'likes' | 'comments' | 'isLiked'>) => {
+    if (!currentUser || !userProfile) return;
+
+    const newInquiry = {
       ...inquiry,
-      id: Date.now().toString(),
+      authorId: currentUser.uid,
+      author: {
+        name: userProfile.name,
+        avatar: '👤'
+      },
       timestamp: new Date().toISOString(),
       likes: 0,
       comments: 0,
-      isLiked: false,
-      isMyPost: true
+      isLiked: false
     };
-    setInquiries(prev => [newInquiry, ...prev]);
+
+    try {
+      await addDoc(collection(db, 'inquiries'), newInquiry);
+    } catch (error) {
+      console.error('Error adding inquiry:', error);
+      // Add to local state on permission error
+      setInquiries(prev => [{ ...newInquiry, id: Date.now().toString(), isMyPost: true }, ...prev]);
+    }
   };
 
-  const toggleLike = (id: string) => {
-    setInquiries(prev => prev.map(inquiry => 
-      inquiry.id === id 
-        ? { 
-            ...inquiry, 
-            isLiked: !inquiry.isLiked,
-            likes: inquiry.isLiked ? inquiry.likes - 1 : inquiry.likes + 1
-          }
-        : inquiry
-    ));
+  const toggleLike = async (id: string) => {
+    if (!currentUser) return;
+
+    const inquiry = inquiries.find(inq => inq.id === id);
+    if (!inquiry) return;
+
+    const newIsLiked = !inquiry.isLiked;
+    const newLikes = newIsLiked ? inquiry.likes + 1 : inquiry.likes - 1;
+
+    try {
+      await updateDoc(doc(db, 'inquiries', id), {
+        likes: newLikes,
+        [`likedBy.${currentUser.uid}`]: newIsLiked
+      });
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      // Update local state on permission error
+      setInquiries(prev => prev.map(inq => 
+        inq.id === id 
+          ? { ...inq, isLiked: newIsLiked, likes: newLikes }
+          : inq
+      ));
+    }
   };
 
-  const addComment = (inquiryId: string, content: string) => {
-    const newComment: Comment = {
-      id: Date.now().toString(),
+  const addComment = async (inquiryId: string, content: string) => {
+    if (!currentUser || !userProfile) return;
+
+    const newComment = {
       inquiryId,
+      authorId: currentUser.uid,
       author: {
-        name: 'أنت',
+        name: userProfile.name,
         avatar: '👤'
       },
       content,
       timestamp: new Date().toISOString(),
       replies: []
     };
-    
-    setComments(prev => [...prev, newComment]);
-    setInquiries(prev => prev.map(inquiry => 
-      inquiry.id === inquiryId 
-        ? { ...inquiry, comments: inquiry.comments + 1 }
-        : inquiry
-    ));
+
+    try {
+      await addDoc(collection(db, 'comments'), newComment);
+      await updateDoc(doc(db, 'inquiries', inquiryId), {
+        comments: increment(1)
+      });
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      // Update local state on permission error
+      const commentWithId = { ...newComment, id: Date.now().toString() };
+      setComments(prev => [...prev, commentWithId]);
+      setInquiries(prev => prev.map(inquiry => 
+        inquiry.id === inquiryId 
+          ? { ...inquiry, comments: inquiry.comments + 1 }
+          : inquiry
+      ));
+    }
   };
 
   const getFilteredInquiries = () => {

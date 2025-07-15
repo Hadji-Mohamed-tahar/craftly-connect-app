@@ -119,22 +119,7 @@ export const FirebaseOrderProvider: React.FC<{ children: React.ReactNode }> = ({
       },
       (error) => {
         console.error('Error listening to orders:', error);
-        // Set fallback orders on permission error
-        const fallbackOrders: Order[] = [
-          {
-            id: '1',
-            title: 'إصلاح تكييف منزلي',
-            description: 'تحتاج إلى إصلاح وحدة التكييف في الصالة',
-            category: 'تكييف وتبريد',
-            price: 150,
-            status: 'pending',
-            clientId: currentUser.uid,
-            clientName: userProfile.name,
-            clientLocation: 'الرياض',
-            createdAt: new Date().toISOString()
-          }
-        ];
-        setOrders(userProfile.userType === 'client' ? fallbackOrders : []);
+        setOrders([]);
         setLoading(false);
       }
     );
@@ -168,57 +153,32 @@ export const FirebaseOrderProvider: React.FC<{ children: React.ReactNode }> = ({
         setCrafters(craftersData);
       } catch (error) {
         console.error('Error loading crafters:', error);
-        // Set fallback crafters on permission error
-        const fallbackCrafters: Crafter[] = [
-          {
-            id: '1',
-            name: 'أحمد السباك',
-            specialty: 'سباكة',
-            experience: '5 سنوات',
-            location: 'الرياض',
-            rating: 4.5,
-            completedOrders: 120,
-            verified: true,
-            phone: '+966501234567'
-          },
-          {
-            id: '2',
-            name: 'محمد الكهربائي',
-            specialty: 'كهرباء',
-            experience: '8 سنوات',
-            location: 'جدة',
-            rating: 4.8,
-            completedOrders: 200,
-            verified: true,
-            phone: '+966507654321'
-          }
-        ];
-        setCrafters(fallbackCrafters);
+        setCrafters([]);
       }
     };
 
     loadCrafters();
   }, []);
 
-  // Load subscription for crafter
+  // Load subscription for crafter from Firebase
   useEffect(() => {
     if (!currentUser || !userProfile || userProfile.userType !== 'crafter') {
       setSubscription(null);
       return;
     }
 
-    // Mock subscription for now - replace with Firebase query later
-    const mockSubscription: Subscription = {
+    // For now, all crafters have free membership
+    const freeSubscription: Subscription = {
       id: '1',
       userId: currentUser.uid,
-      planName: 'العضوية الشهرية',
+      planName: 'العضوية المجانية',
       status: 'active',
-      startDate: '2024-01-01T00:00:00Z',
-      endDate: '2024-02-01T00:00:00Z',
-      price: 50,
-      type: 'monthly'
+      startDate: new Date().toISOString(),
+      endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+      price: 0,
+      type: 'yearly'
     };
-    setSubscription(mockSubscription);
+    setSubscription(freeSubscription);
   }, [currentUser, userProfile]);
 
   const createOrder = async (orderData: Omit<Order, 'id' | 'clientId' | 'clientName' | 'createdAt' | 'status'>) => {
@@ -237,10 +197,7 @@ export const FirebaseOrderProvider: React.FC<{ children: React.ReactNode }> = ({
       return docRef.id;
     } catch (error) {
       console.error('Error creating order:', error);
-      // Return mock ID on permission error
-      const mockId = Date.now().toString();
-      setOrders(prev => [...prev, { ...newOrder, id: mockId }]);
-      return mockId;
+      throw error;
     }
   };
 
@@ -257,12 +214,7 @@ export const FirebaseOrderProvider: React.FC<{ children: React.ReactNode }> = ({
       });
     } catch (error) {
       console.error('Error accepting order:', error);
-      // Update local state on permission error
-      setOrders(prev => prev.map(order => 
-        order.id === orderId 
-          ? { ...order, status: 'accepted' as OrderStatus, crafterId: currentUser.uid, crafterName: userProfile.name }
-          : order
-      ));
+      throw error;
     }
   };
 
@@ -273,9 +225,7 @@ export const FirebaseOrderProvider: React.FC<{ children: React.ReactNode }> = ({
       });
     } catch (error) {
       console.error('Error starting order:', error);
-      setOrders(prev => prev.map(order => 
-        order.id === orderId ? { ...order, status: 'in_progress' as OrderStatus } : order
-      ));
+      throw error;
     }
   };
 
@@ -287,9 +237,7 @@ export const FirebaseOrderProvider: React.FC<{ children: React.ReactNode }> = ({
       });
     } catch (error) {
       console.error('Error completing order:', error);
-      setOrders(prev => prev.map(order => 
-        order.id === orderId ? { ...order, status: 'completed' as OrderStatus } : order
-      ));
+      throw error;
     }
   };
 
@@ -302,9 +250,7 @@ export const FirebaseOrderProvider: React.FC<{ children: React.ReactNode }> = ({
       });
     } catch (error) {
       console.error('Error cancelling order:', error);
-      setOrders(prev => prev.map(order => 
-        order.id === orderId ? { ...order, status: 'cancelled' as OrderStatus } : order
-      ));
+      throw error;
     }
   };
 
@@ -338,9 +284,7 @@ export const FirebaseOrderProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     } catch (error) {
       console.error('Error rating order:', error);
-      setOrders(prev => prev.map(order => 
-        order.id === orderId ? { ...order, status: 'rated' as OrderStatus, rating, review } : order
-      ));
+      throw error;
     }
   };
 

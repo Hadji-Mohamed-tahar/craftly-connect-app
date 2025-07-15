@@ -1,10 +1,14 @@
-
 import React from 'react';
 import { User, Wrench } from 'lucide-react';
-import { useOrder } from '../contexts/OrderContext';
 
-const UserTypeSelector: React.FC = () => {
-  const { setUserType } = useOrder();
+interface UserTypeSelectorProps {
+  onSelect: (type: 'client' | 'crafter') => void;
+}
+
+const UserTypeSelector: React.FC<UserTypeSelectorProps> = ({ onSelect }) => {
+  const handleSelection = (type: 'client' | 'crafter') => {
+    onSelect(type);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center px-4">
@@ -16,7 +20,7 @@ const UserTypeSelector: React.FC = () => {
 
         <div className="space-y-4">
           <button
-            onClick={() => setUserType('client')}
+            onClick={() => handleSelection('client')}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-xl font-medium transition-colors flex items-center justify-center gap-3"
           >
             <User className="w-6 h-6" />
@@ -27,7 +31,7 @@ const UserTypeSelector: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setUserType('crafter')}
+            onClick={() => handleSelection('crafter')}
             className="w-full bg-amber-500 hover:bg-amber-600 text-white p-4 rounded-xl font-medium transition-colors flex items-center justify-center gap-3"
           >
             <Wrench className="w-6 h-6" />
