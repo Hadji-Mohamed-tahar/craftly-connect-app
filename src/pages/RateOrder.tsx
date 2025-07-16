@@ -1,58 +1,83 @@
-
 import React, { useState } from 'react';
-import { ArrowLeft, Star, Send } from 'lucide-react';
+import { ArrowLeft, Star, CheckCircle, AlertCircle } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useOrders } from '../contexts/FirebaseOrderContext';
+import { useAuth } from '../contexts/AuthContext';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
+import { Button } from '../components/ui/button';
 
 const RateOrder: React.FC = () => {
   const navigate = useNavigate();
-  const { orderId } = useParams();
+  const { id } = useParams();
   const { orders, rateOrder } = useOrders();
+  const { userProfile } = useAuth();
   const [rating, setRating] = useState(0);
+  const [hoveredRating, setHoveredRating] = useState(0);
   const [review, setReview] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const order = orders.find(o => o.id === orderId);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  if (!order) {
+  const order = orders.find(o => o.id === id);
+
+  if (!order || userProfile?.userType !== 'client') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">الطلب غير موجود</h2>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">غير مصرح</h2>
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/orders')}
             className="text-blue-500 hover:text-blue-600 font-medium"
           >
-            العودة للرئيسية
+            العودة للطلبات
           </button>
         </div>
       </div>
     );
   }
 
-  const handleSubmitRating = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (rating === 0) {
-      alert('يرجى اختيار تقييم للحرفي');
-      return;
-    }
-
-    if (!review.trim()) {
-      alert('يرجى كتابة تعليق على العمل');
+      setErrorMessage('يرجى اختيار تقييم');
+      setShowErrorModal(true);
       return;
     }
 
     setIsSubmitting(true);
-    
     try {
-      await rateOrder(order.id, rating, review.trim());
-      alert('شكراً لك! تم إرسال التقييم بنجاح');
-      navigate('/');
+      await rateOrder(order.id, rating, review.trim() || undefined);
+      setShowSuccessModal(true);
     } catch (error) {
       console.error('Error rating order:', error);
-      alert('حدث خطأ أثناء إرسال التقييم');
+      setErrorMessage('حدث خطأ أثناء إرسال التقييم');
+      setShowErrorModal(true);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const renderStars = () => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <button
+        key={i}
+        type="button"
+        onMouseEnter={() => setHoveredRating(i + 1)}
+        onMouseLeave={() => setHoveredRating(0)}
+        onClick={() => setRating(i + 1)}
+        className="p-1 transition-transform hover:scale-110"
+      >
+        <Star
+          className={`w-8 h-8 ${
+            i < (hoveredRating || rating)
+              ? 'text-yellow-400 fill-current'
+              : 'text-gray-300'
+          } transition-colors`}
+        />
+      </button>
+    ));
   };
 
   return (
@@ -62,7 +87,7 @@ const RateOrder: React.FC = () => {
         <div className="px-4 py-4">
           <div className="flex items-center justify-between">
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate(`/order/${order.id}`)}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -76,99 +101,120 @@ const RateOrder: React.FC = () => {
       <div className="p-4 space-y-6">
         {/* Order Summary */}
         <div className="bg-white rounded-xl p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-gray-800 mb-2">{order.title}</h2>
-          <p className="text-gray-600 mb-4">{order.description}</p>
-          
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-sm text-gray-600">
-              <p>الحرفي: <span className="font-medium text-gray-800">{order.crafterName}</span></p>
-              <p>السعر: <span className="font-bold text-green-600">{order.price} ر.س</span></p>
-            </div>
-            <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
-              ✅ مكتمل
-            </div>
+          <h2 className="text-lg font-semibold text-gray-800 mb-3">{order.title}</h2>
+          <div className="flex items-center justify-between">
+            <span className="text-gray-600">الحرفي: {order.crafterName}</span>
+            <span className="text-lg font-bold text-green-600">{order.price} د.ج</span>
           </div>
         </div>
 
-        {/* Rating Section */}
-        <div className="bg-white rounded-xl p-6 shadow-sm">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">كيف كانت تجربتك مع الحرفي؟</h3>
-          
-          <div className="text-center mb-6">
-            <p className="text-gray-600 mb-4">اختر تقييمك من 1 إلى 5 نجوم</p>
-            <div className="flex justify-center gap-2 mb-2">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  onClick={() => setRating(star)}
-                  className="transition-colors hover:scale-110 transform"
-                >
-                  <Star
-                    className={`w-10 h-10 ${
-                      star <= rating
-                        ? 'text-yellow-400 fill-current'
-                        : 'text-gray-300 hover:text-yellow-200'
-                    }`}
-                  />
-                </button>
-              ))}
+        {/* Rating Form */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="bg-white rounded-xl p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">كيف كان العمل؟</h3>
+            
+            {/* Stars */}
+            <div className="flex justify-center gap-2 mb-6">
+              {renderStars()}
             </div>
-            {rating > 0 && (
-              <p className="text-sm text-gray-600">
-                {rating === 1 && 'سيء جداً'}
-                {rating === 2 && 'سيء'}
-                {rating === 3 && 'مقبول'}
-                {rating === 4 && 'جيد'}
-                {rating === 5 && 'ممتاز'}
-              </p>
+            
+            {/* Rating Text */}
+            <div className="text-center mb-6">
+              {rating > 0 && (
+                <p className="text-gray-600">
+                  {rating === 1 && 'ضعيف جداً'}
+                  {rating === 2 && 'ضعيف'}
+                  {rating === 3 && 'متوسط'}
+                  {rating === 4 && 'جيد'}
+                  {rating === 5 && 'ممتاز'}
+                </p>
+              )}
+            </div>
+
+            {/* Review Text */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                تعليق على العمل (اختياري)
+              </label>
+              <textarea
+                value={review}
+                onChange={(e) => setReview(e.target.value)}
+                placeholder="شاركنا رأيك في جودة العمل والتعامل..."
+                rows={4}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={isSubmitting || rating === 0}
+            className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white py-4 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+          >
+            {isSubmitting ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                جاري الإرسال...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-5 h-5" />
+                إرسال التقييم
+              </>
             )}
-          </div>
-        </div>
-
-        {/* Review Section */}
-        <div className="bg-white rounded-xl p-6 shadow-sm">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">اكتب تعليقك</h3>
-          
-          <textarea
-            value={review}
-            onChange={(e) => setReview(e.target.value)}
-            placeholder="شاركنا تجربتك مع الحرفي... كيف كانت جودة العمل؟ هل تم الالتزام بالمواعيد؟"
-            rows={5}
-            className="w-full p-4 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-          
-          <p className="text-sm text-gray-500 mt-2">
-            سيساعد تقييمك الحرفيين الآخرين على تحسين خدماتهم
-          </p>
-        </div>
-
-        {/* Submit Button */}
-        <button
-          onClick={handleSubmitRating}
-          disabled={rating === 0 || !review.trim() || isSubmitting}
-          className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-4 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-        >
-          {isSubmitting ? (
-            <>
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              جاري إرسال التقييم...
-            </>
-          ) : (
-            <>
-              <Send className="w-5 h-5" />
-              إرسال التقييم
-            </>
-          )}
-        </button>
-
-        {/* Skip Option */}
-        <button
-          onClick={() => navigate('/')}
-          className="w-full text-gray-500 hover:text-gray-700 py-2 text-sm transition-colors"
-        >
-          تخطي التقييم الآن
-        </button>
+          </button>
+        </form>
       </div>
+
+      {/* Success Modal */}
+      <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2 mb-2">
+              <CheckCircle className="w-6 h-6 text-green-600" />
+              <DialogTitle>شكراً لك!</DialogTitle>
+            </div>
+            <DialogDescription>
+              تم إرسال تقييمك بنجاح. شكراً لك على استخدام الخدمة.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              onClick={() => {
+                setShowSuccessModal(false);
+                navigate('/');
+              }}
+              className="w-full"
+            >
+              العودة للرئيسية
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Error Modal */}
+      <Dialog open={showErrorModal} onOpenChange={setShowErrorModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2 mb-2">
+              <AlertCircle className="w-6 h-6 text-red-600" />
+              <DialogTitle>خطأ</DialogTitle>
+            </div>
+            <DialogDescription>
+              {errorMessage}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              onClick={() => setShowErrorModal(false)}
+              className="w-full"
+            >
+              حسناً
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

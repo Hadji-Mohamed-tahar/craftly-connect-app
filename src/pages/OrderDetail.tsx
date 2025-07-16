@@ -15,8 +15,10 @@ const OrderDetail: React.FC = () => {
   const [isApplying, setIsApplying] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showSelectCrafterModal, setShowSelectCrafterModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   
   const order = orders.find(o => o.id === id);
@@ -60,6 +62,17 @@ const OrderDetail: React.FC = () => {
     }
   };
 
+  const handleCompleteOrder = async () => {
+    try {
+      setIsCompleting(true);
+      await completeOrder(order.id);
+      setIsCompleting(false);
+    } catch (error) {
+      console.error('Error completing order:', error);
+      setIsCompleting(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
@@ -98,7 +111,9 @@ const OrderDetail: React.FC = () => {
   const isMyOrder = userType === 'client' && order.clientId === currentUser?.uid;
   const canAcceptOrder = userType === 'crafter' && order.status === 'pending';
   const canStartOrder = userType === 'crafter' && order.status === 'accepted' && order.crafterId === currentUser?.uid;
-  const canChat = order.status === 'in_progress' && 
+  const canCompleteOrder = userType === 'crafter' && order.status === 'in_progress' && order.crafterId === currentUser?.uid;
+  const canChat = order.status === 'pending' || 
+                  (order.status === 'accepted' || order.status === 'in_progress' || order.status === 'completed') && 
                   ((userType === 'client' && isMyOrder) || (userType === 'crafter' && order.crafterId === currentUser?.uid));
 
   return (
@@ -217,6 +232,27 @@ const OrderDetail: React.FC = () => {
               </div>
             )}
 
+            {/* Complete Order Button */}
+            {canCompleteOrder && (
+              <button
+                onClick={handleCompleteOrder}
+                disabled={isCompleting}
+                className="w-full bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+              >
+                {isCompleting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    جاري إنهاء العمل...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-5 h-5" />
+                    إنهاء العمل
+                  </>
+                )}
+              </button>
+            )}
+
             {/* Chat Button */}
             {canChat && (
               <button
@@ -224,33 +260,59 @@ const OrderDetail: React.FC = () => {
                 className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
               >
                 <MessageCircle className="w-5 h-5" />
-                فتح المحادثة
+                {order.status === 'pending' ? 'بدء محادثة' : 'فتح المحادثة'}
+              </button>
+            )}
+
+            {/* Client: Select Crafter Button */}
+            {userType === 'client' && isMyOrder && order.status === 'pending' && (
+              <button
+                onClick={() => setShowSelectCrafterModal(true)}
+                className="w-full bg-amber-500 hover:bg-amber-600 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+              >
+                <User className="w-5 h-5" />
+                اختيار حرفي للعمل
+              </button>
+            )}
+
+            {/* Client: Rate Completed Order */}
+            {userType === 'client' && isMyOrder && order.status === 'completed' && !order.rating && (
+              <button
+                onClick={() => navigate(`/rate-order/${order.id}`)}
+                className="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+              >
+                <Star className="w-5 h-5" />
+                تقييم العمل
               </button>
             )}
           </div>
         </div>
 
-        {/* Client Info Card */}
-        <div className="bg-white rounded-xl p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">معلومات العميل</h3>
-          
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <User className="w-5 h-5 text-gray-400" />
-              <span className="text-gray-800">{order.clientName}</span>
-            </div>
+        {/* Client Info Card - Hide phone for pending orders unless you're the client */}
+        {(order.status !== 'pending' || isMyOrder) && (
+          <div className="bg-white rounded-xl p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">معلومات العميل</h3>
             
-            <div className="flex items-center gap-3">
-              <Phone className="w-5 h-5 text-gray-400" />
-              <span className="text-gray-800 font-mono">{order.clientPhone}</span>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <MapPin className="w-5 h-5 text-gray-400" />
-              <span className="text-gray-800">{order.clientLocation}</span>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <User className="w-5 h-5 text-gray-400" />
+                <span className="text-gray-800">{order.clientName}</span>
+              </div>
+              
+              {(order.status !== 'pending' || isMyOrder) && order.clientPhone && (
+                <div className="flex items-center gap-3">
+                  <Phone className="w-5 h-5 text-gray-400" />
+                  <span className="text-gray-800 font-mono">{order.clientPhone}</span>
+                </div>
+              )}
+              
+              <div className="flex items-center gap-3">
+                <MapPin className="w-5 h-5 text-gray-400" />
+                <span className="text-gray-800">{order.clientLocation}</span>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Crafter Info Card (if assigned) */}
         {order.crafterName && (
