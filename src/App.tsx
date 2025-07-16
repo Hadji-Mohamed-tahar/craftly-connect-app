@@ -12,6 +12,7 @@ import Orders from "./pages/Orders";
 import OrderDetail from "./pages/OrderDetail";
 import CreateOrder from "./pages/CreateOrder";
 import CrafterSearchPage from "./pages/CrafterSearchPage";
+import CrafterProfile from "./pages/CrafterProfile";
 import Chat from "./pages/Chat";
 import RateOrder from "./pages/RateOrder";
 import Subscription from "./pages/Subscription";
@@ -57,6 +58,7 @@ const AppContent = () => {
           <Route path="/order/:id" element={<OrderDetail />} />
           <Route path="/create-order" element={<CreateOrder />} />
           <Route path="/search-crafters" element={<CrafterSearchPage />} />
+          <Route path="/crafter-profile" element={<CrafterProfile />} />
           <Route path="/chat/:orderId" element={<Chat />} />
           <Route path="/rate-order/:orderId" element={<RateOrder />} />
           <Route path="/subscription" element={<Subscription />} />

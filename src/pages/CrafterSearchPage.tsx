@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Search, Star, MapPin, Award, Phone, MessageCircle, User, Plus } from 'lucide-react';
+import { ArrowLeft, Search, Star, MapPin, Award, Phone, MessageCircle, User, Plus, CheckCircle, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useOrders, Crafter } from '../contexts/FirebaseOrderContext';
 import { useAuth } from '../contexts/AuthContext';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
+import { Button } from '../components/ui/button';
 
 const CrafterSearchPage: React.FC = () => {
   const navigate = useNavigate();
@@ -78,9 +80,22 @@ const CrafterSearchPage: React.FC = () => {
     setShowOrderForm(true);
   };
 
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmitOrder = async () => {
     if (!selectedCrafter || !userProfile) return;
 
+    // Validation
+    if (!orderForm.title || !orderForm.description || !orderForm.price || !orderForm.clientLocation) {
+      setErrorMessage('يرجى ملء جميع الحقول');
+      setShowErrorModal(true);
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
       const orderId = await createOrder({
         ...orderForm,
@@ -88,19 +103,18 @@ const CrafterSearchPage: React.FC = () => {
         clientPhone: userProfile.phone
       });
 
-      alert('تم إرسال الطلب بنجاح للحرفي!');
-      setShowOrderForm(false);
-      setSelectedCrafter(null);
-      navigate(`/order/${orderId}`);
+      setShowSuccessModal(true);
     } catch (error) {
       console.error('Error creating order:', error);
-      alert('حدث خطأ أثناء إرسال الطلب');
+      setErrorMessage('حدث خطأ أثناء إرسال الطلب');
+      setShowErrorModal(true);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleViewProfile = (crafter: Crafter) => {
-    // عرض ملف الحرفي بدون رقم الهاتف
-    alert(`ملف ${crafter.name}\nالتخصص: ${crafter.specialty}\nالتقييم: ${crafter.rating}/5\nالطلبات المكتملة: ${crafter.completedOrders}\n\nلعرض معلومات الاتصال، يرجى إرسال طلب للحرفي أولاً.`);
+    navigate('/crafter-profile', { state: { crafter } });
   };
 
   if (showOrderForm && selectedCrafter) {
@@ -168,7 +182,7 @@ const CrafterSearchPage: React.FC = () => {
                     placeholder="0"
                     className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">ر.س</div>
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">د.ج</div>
                 </div>
               </div>
 
@@ -187,12 +201,73 @@ const CrafterSearchPage: React.FC = () => {
 
           <button
             onClick={handleSubmitOrder}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+            disabled={isSubmitting}
+            className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white py-4 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
           >
-            <Plus className="w-5 h-5" />
-            إرسال الطلب للحرفي
+            {isSubmitting ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                جاري الإرسال...
+              </>
+            ) : (
+              <>
+                <Plus className="w-5 h-5" />
+                إرسال الطلب للحرفي
+              </>
+            )}
           </button>
         </div>
+
+        {/* Success Modal */}
+        <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle className="w-6 h-6 text-green-600" />
+                <DialogTitle>تم بنجاح!</DialogTitle>
+              </div>
+              <DialogDescription>
+                تم إرسال الطلب بنجاح للحرفي وسيتم إشعاره بالطلب.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button 
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  setShowOrderForm(false);
+                  setSelectedCrafter(null);
+                  navigate('/');
+                }}
+                className="w-full"
+              >
+                العودة للرئيسية
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Error Modal */}
+        <Dialog open={showErrorModal} onOpenChange={setShowErrorModal}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <div className="flex items-center gap-2 mb-2">
+                <AlertCircle className="w-6 h-6 text-red-600" />
+                <DialogTitle>خطأ</DialogTitle>
+              </div>
+              <DialogDescription>
+                {errorMessage}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button 
+                onClick={() => setShowErrorModal(false)}
+                className="w-full"
+              >
+                حسناً
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
@@ -356,6 +431,55 @@ const CrafterSearchPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Success Modal */}
+      <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2 mb-2">
+              <CheckCircle className="w-6 h-6 text-green-600" />
+              <DialogTitle>تم بنجاح!</DialogTitle>
+            </div>
+            <DialogDescription>
+              تم إرسال الطلب بنجاح للحرفي وسيتم إشعاره بالطلب.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              onClick={() => {
+                setShowSuccessModal(false);
+                navigate('/');
+              }}
+              className="w-full"
+            >
+              العودة للرئيسية
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Error Modal */}
+      <Dialog open={showErrorModal} onOpenChange={setShowErrorModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2 mb-2">
+              <AlertCircle className="w-6 h-6 text-red-600" />
+              <DialogTitle>خطأ</DialogTitle>
+            </div>
+            <DialogDescription>
+              {errorMessage}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              onClick={() => setShowErrorModal(false)}
+              className="w-full"
+            >
+              حسناً
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

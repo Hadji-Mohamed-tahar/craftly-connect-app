@@ -83,7 +83,7 @@ export const FirebaseOrderProvider: React.FC<{ children: React.ReactNode }> = ({
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Listen to orders for current user
+  // Listen to orders - Get all orders for crafters, only own orders for clients
   useEffect(() => {
     if (!currentUser || !userProfile) {
       setOrders([]);
@@ -95,15 +95,16 @@ export const FirebaseOrderProvider: React.FC<{ children: React.ReactNode }> = ({
     let ordersQuery;
 
     if (userProfile.userType === 'client') {
+      // Clients see only their own orders
       ordersQuery = query(
         ordersRef,
         where('clientId', '==', currentUser.uid),
         orderBy('createdAt', 'desc')
       );
     } else {
+      // Crafters see all orders (to browse available ones) + their own accepted orders
       ordersQuery = query(
         ordersRef,
-        where('crafterId', '==', currentUser.uid),
         orderBy('createdAt', 'desc')
       );
     }

@@ -10,7 +10,7 @@ import { Button } from '../components/ui/button';
 const OrderDetail: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { orders, acceptOrder, startOrder, completeOrder } = useOrders();
+  const { orders, acceptOrder, startOrder, completeOrder, cancelOrder } = useOrders();
   const { userProfile, currentUser } = useAuth();
   const [isApplying, setIsApplying] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
@@ -358,11 +358,16 @@ const OrderDetail: React.FC = () => {
             </Button>
             <Button 
               variant="destructive"
-              onClick={() => {
+              onClick={async () => {
                 if (cancelReason.trim()) {
-                  setShowCancelModal(false);
-                  setCancelReason('');
-                  // Add cancel logic here
+                  try {
+                    await cancelOrder(order.id, cancelReason);
+                    setShowCancelModal(false);
+                    setCancelReason('');
+                    navigate('/orders');
+                  } catch (error) {
+                    console.error('Error cancelling order:', error);
+                  }
                 }
               }}
               disabled={!cancelReason.trim()}
