@@ -185,8 +185,21 @@ export const FirebaseOrderProvider: React.FC<{ children: React.ReactNode }> = ({
   const createOrder = async (orderData: Omit<Order, 'id' | 'clientId' | 'clientName' | 'createdAt' | 'status'>) => {
     if (!currentUser || !userProfile) throw new Error('User not authenticated');
 
-    const newOrder = {
+    // تنظيف البيانات لتجنب القيم undefined
+    const cleanOrderData = {
       ...orderData,
+      clientPhone: orderData.clientPhone || undefined // إزالة المجال إذا كان فارغاً
+    };
+
+    // إزالة المجالات التي قيمتها undefined
+    Object.keys(cleanOrderData).forEach(key => {
+      if (cleanOrderData[key as keyof typeof cleanOrderData] === undefined) {
+        delete cleanOrderData[key as keyof typeof cleanOrderData];
+      }
+    });
+
+    const newOrder = {
+      ...cleanOrderData,
       clientId: currentUser.uid,
       clientName: userProfile.name,
       status: 'pending' as OrderStatus,

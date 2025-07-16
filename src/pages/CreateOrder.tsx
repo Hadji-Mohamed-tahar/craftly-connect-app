@@ -62,7 +62,7 @@ const CreateOrder: React.FC = () => {
         description: formData.description,
         category: formData.category,
         price: parseFloat(formData.price),
-        clientPhone: userProfile.phone,
+        clientPhone: userProfile.phone || '', // إضافة قيمة افتراضية فارغة إذا لم يكن هناك رقم هاتف
         clientLocation: formData.clientLocation
       });
 

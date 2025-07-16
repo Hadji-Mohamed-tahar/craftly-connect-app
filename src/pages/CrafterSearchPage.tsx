@@ -100,7 +100,7 @@ const CrafterSearchPage: React.FC = () => {
       const orderId = await createOrder({
         ...orderForm,
         price: parseFloat(orderForm.price),
-        clientPhone: userProfile.phone
+        clientPhone: userProfile.phone || '' // إضافة قيمة افتراضية فارغة إذا لم يكن هناك رقم هاتف
       });
 
       setShowSuccessModal(true);
