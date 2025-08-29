@@ -28,6 +28,12 @@ import { InquiryProvider } from "./contexts/InquiryContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { FirebaseOrderProvider } from "./contexts/FirebaseOrderContext";
 import { ProposalProvider } from "./contexts/ProposalContext";
+import { AdminProvider } from "./contexts/AdminContext";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminRequests from "./pages/admin/AdminRequests";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +59,7 @@ const AppContent = () => {
     <BrowserRouter>
       <div className="min-h-screen bg-gray-50 pb-20">
         <Routes>
+          {/* Regular App Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/inquiries" element={<Inquiries />} />
           <Route path="/inquiry/:id" element={<InquiryDetail />} />
@@ -70,6 +77,15 @@ const AppContent = () => {
           <Route path="/profile" element={<Profile />} />
           <Route path="/edit-profile" element={<EditProfile />} />
           <Route path="/settings" element={<Settings />} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="requests" element={<AdminRequests />} />
+            <Route path="analytics" element={<AdminAnalytics />} />
+          </Route>
+          
           <Route path="*" element={<NotFound />} />
         </Routes>
         <BottomNavigation />
@@ -84,13 +100,15 @@ const App = () => (
       <Toaster />
       <Sonner />
       <AuthProvider>
-        <InquiryProvider>
-          <FirebaseOrderProvider>
-            <ProposalProvider>
-              <AppContent />
-            </ProposalProvider>
-          </FirebaseOrderProvider>
-        </InquiryProvider>
+        <AdminProvider>
+          <InquiryProvider>
+            <FirebaseOrderProvider>
+              <ProposalProvider>
+                <AppContent />
+              </ProposalProvider>
+            </FirebaseOrderProvider>
+          </InquiryProvider>
+        </AdminProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>

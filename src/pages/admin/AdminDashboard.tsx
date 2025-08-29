@@ -1,0 +1,178 @@
+import React from 'react';
+import { Users, FileText, ShoppingCart, TrendingUp, DollarSign, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { StatsCard } from '@/components/admin/StatsCard';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { useAdmin } from '@/contexts/AdminContext';
+import { Skeleton } from '@/components/ui/skeleton';
+
+export default function AdminDashboard() {
+  const { stats, loading, users, requests, orders } = useAdmin();
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(8)].map((_, i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const recentUsers = users.slice(-5).reverse();
+  const pendingRequests = requests.filter(req => req.status === 'pending').slice(-5);
+  const activeOrders = orders.filter(order => order.status === 'inProgress').slice(-5);
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">لوحة التحكم الإدارية</h1>
+          <p className="text-muted-foreground">
+            إدارة شاملة لجميع عمليات المنصة
+          </p>
+        </div>
+        <Button onClick={() => window.location.reload()}>
+          تحديث البيانات
+        </Button>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <StatsCard
+          title="إجمالي المستخدمين"
+          value={stats.totalUsers}
+          description="العدد الكلي للمسجلين"
+          icon={Users}
+          trend={{ value: 12, isPositive: true }}
+        />
+        <StatsCard
+          title="الزبائن"
+          value={stats.totalClients}
+          description="المستخدمين الطالبين للخدمات"
+          icon={Users}
+        />
+        <StatsCard
+          title="الحرفيين"
+          value={stats.totalCrafters}
+          description="مقدمي الخدمات"
+          icon={Users}
+        />
+        <StatsCard
+          title="الطلبات الكلية"
+          value={stats.totalRequests}
+          description="جميع طلبات الخدمات"
+          icon={FileText}
+          trend={{ value: 8, isPositive: true }}
+        />
+        <StatsCard
+          title="الطلبات النشطة"
+          value={stats.activeOrders}
+          description="قيد التنفيذ حاليًا"
+          icon={Clock}
+        />
+        <StatsCard
+          title="الطلبات المكتملة"
+          value={stats.completedOrders}
+          description="تم إنجازها بنجاح"
+          icon={CheckCircle}
+          trend={{ value: 15, isPositive: true }}
+        />
+        <StatsCard
+          title="إجمالي الأرباح"
+          value={`${stats.totalRevenue.toLocaleString()} ر.س`}
+          description="من العمولات والاشتراكات"
+          icon={DollarSign}
+          trend={{ value: 23, isPositive: true }}
+        />
+        <StatsCard
+          title="النمو الشهري"
+          value={`${stats.monthlyGrowth}%`}
+          description="مقارنة بالشهر الماضي"
+          icon={TrendingUp}
+          trend={{ value: stats.monthlyGrowth, isPositive: true }}
+        />
+      </div>
+
+      {/* Recent Activity Grid */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        
+        {/* Recent Users */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users size={20} />
+              المستخدمين الجدد
+            </CardTitle>
+            <CardDescription>آخر 5 مستخدمين مسجلين</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {recentUsers.map((user) => (
+              <div key={user.id} className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">{user.name}</p>
+                  <p className="text-sm text-muted-foreground">{user.email}</p>
+                </div>
+                <Badge variant={user.userType === 'crafter' ? 'default' : 'secondary'}>
+                  {user.userType === 'crafter' ? 'حرفي' : 'زبون'}
+                </Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Pending Requests */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertCircle size={20} />
+              الطلبات المعلقة
+            </CardTitle>
+            <CardDescription>تحتاج إلى مراجعة</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {pendingRequests.map((request) => (
+              <div key={request.id} className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium line-clamp-1">{request.title}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(request.createdAt).toLocaleDateString('ar-SA')}
+                  </p>
+                </div>
+                <Badge variant="outline">معلق</Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Active Orders */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ShoppingCart size={20} />
+              الطلبات النشطة
+            </CardTitle>
+            <CardDescription>قيد التنفيذ حاليًا</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {activeOrders.map((order) => (
+              <div key={order.id} className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">{order.title || 'طلب خدمة'}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {order.amount ? `${order.amount} ر.س` : 'لم يحدد السعر'}
+                  </p>
+                </div>
+                <Badge>نشط</Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
