@@ -4,6 +4,7 @@ import { ArrowLeft, User, Phone, MapPin, Star, Calendar, Package, Crown, Setting
 import { useNavigate } from 'react-router-dom';
 import { useOrders } from '../contexts/FirebaseOrderContext';
 import { useAuth } from '../contexts/AuthContext';
+import { CrafterData } from '../lib/userDataStructure';
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
@@ -65,7 +66,9 @@ const Profile: React.FC = () => {
                   {userProfile.name}
                 </h2>
                 <p className="text-gray-600">
-                  {userProfile.userType === 'client' ? 'عميل' : `حرفي ${userProfile.specialty || ''}`}
+                  {userProfile.userType === 'client' ? 'عميل' : 
+                   userProfile.userType === 'admin' ? 'مدير النظام' :
+                   `حرفي ${(userProfile as CrafterData).specialty || ''}`}
                 </p>
                 {userProfile.userType === 'crafter' && averageRating > 0 && (
                   <div className="flex items-center gap-1 mt-1">

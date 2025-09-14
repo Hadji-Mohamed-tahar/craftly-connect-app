@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, User, Mail, Lock, Phone, MapPin, Briefcase } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { RegistrationData, SPECIALTIES, EXPERIENCE_LEVELS, SUPPORTED_CITIES } from '../lib/userDataStructure';
 
 interface AuthFormProps {
   onSuccess?: () => void;
@@ -34,17 +35,18 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
       if (isLogin) {
         await login(formData.email, formData.password);
       } else {
-        const additionalData = formData.userType === 'crafter' ? {
+        const registrationData: RegistrationData = {
+          email: formData.email,
+          password: formData.password,
+          name: formData.name,
           phone: formData.phone,
           location: formData.location,
-          specialty: formData.specialty,
-          experience: formData.experience
-        } : {
-          phone: formData.phone,
-          location: formData.location
+          userType: formData.userType,
+          specialty: formData.userType === 'crafter' ? formData.specialty : undefined,
+          experience: formData.userType === 'crafter' ? formData.experience : undefined,
         };
         
-        await register(formData.email, formData.password, formData.name, formData.userType, additionalData);
+        await register(registrationData);
       }
       
       if (onSuccess) onSuccess();
@@ -185,15 +187,18 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
                   المدينة *
                 </label>
                 <div className="relative">
-                  <input
-                    type="text"
-                    name="location"
-                    value={formData.location}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                    placeholder="الرياض، جدة، الدمام..."
-                    required
-                  />
+                    <select
+                      name="location"
+                      value={formData.location}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      required
+                    >
+                      <option value="">اختر المدينة</option>
+                      {SUPPORTED_CITIES.map(city => (
+                        <option key={city} value={city}>{city}</option>
+                      ))}
+                    </select>
                   <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 </div>
               </div>
@@ -212,14 +217,9 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
                       required
                     >
                       <option value="">اختر التخصص</option>
-                      <option value="نجارة">نجارة</option>
-                      <option value="سباكة">سباكة</option>
-                      <option value="كهرباء">كهرباء</option>
-                      <option value="تكييف">تكييف</option>
-                      <option value="صباغة">صباغة</option>
-                      <option value="بلاط وسيراميك">بلاط وسيراميك</option>
-                      <option value="تنظيف">تنظيف</option>
-                      <option value="صيانة عامة">صيانة عامة</option>
+                      {SPECIALTIES.map(specialty => (
+                        <option key={specialty} value={specialty}>{specialty}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -228,15 +228,18 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
                       سنوات الخبرة *
                     </label>
                     <div className="relative">
-                      <input
-                        type="text"
+                      <select
                         name="experience"
                         value={formData.experience}
                         onChange={handleChange}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                        placeholder="5 سنوات، 10+ سنوات..."
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                         required
-                      />
+                      >
+                        <option value="">اختر مستوى الخبرة</option>
+                        {EXPERIENCE_LEVELS.map(level => (
+                          <option key={level} value={level}>{level}</option>
+                        ))}
+                      </select>
                       <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     </div>
                   </div>

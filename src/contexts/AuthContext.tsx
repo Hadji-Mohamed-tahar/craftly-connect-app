@@ -3,27 +3,18 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
+import { RegistrationData, createUserDocument, ClientData, CrafterData, AdminData } from '../lib/userDataStructure';
+import { checkAdminStatus } from '../lib/adminRegistration';
 
-interface UserProfile {
-  uid: string;
-  email: string;
-  name: string;
-  userType: 'client' | 'crafter';
-  phone?: string;
-  location?: string;
-  specialty?: string;
-  experience?: string;
-  rating?: number;
-  completedOrders?: number;
-  verified?: boolean;
-}
+// استخدام النماذج المحدثة من userDataStructure
+type UserProfile = ClientData | CrafterData | AdminData;
 
 interface AuthContextType {
   currentUser: User | null;
   userProfile: UserProfile | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string, userType: 'client' | 'crafter', additionalData?: any) => Promise<void>;
+  register: (registrationData: RegistrationData) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -46,27 +37,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await signInWithEmailAndPassword(auth, email, password);
   };
 
-  const register = async (email: string, password: string, name: string, userType: 'client' | 'crafter', additionalData: any = {}) => {
-    const { user } = await createUserWithEmailAndPassword(auth, email, password);
-    await updateProfile(user, { displayName: name });
-    
-    const userDoc = {
-      uid: user.uid,
-      email,
-      name,
-      userType,
-      ...additionalData,
-      createdAt: new Date().toISOString(),
-      verified: false,
-      rating: userType === 'crafter' ? 0 : undefined,
-      completedOrders: userType === 'crafter' ? 0 : undefined
-    };
-
+  const register = async (registrationData: RegistrationData) => {
     try {
-      await setDoc(doc(db, 'users', user.uid), userDoc);
+      // إنشاء الحساب
+      const { user } = await createUserWithEmailAndPassword(auth, registrationData.email, registrationData.password);
+      await updateProfile(user, { displayName: registrationData.name });
+      
+      // إنشاء بيانات المستخدم المنظمة
+      const userDocument = createUserDocument(user.uid, registrationData);
+
+      // حفظ في قاعدة البيانات
+      await setDoc(doc(db, 'users', user.uid), userDocument);
+      
     } catch (error) {
       console.error('Error creating user document:', error);
-      // Continue with fallback profile even if Firestore write fails
+      throw error;
     }
   };
 
@@ -80,31 +65,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (user) {
         try {
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
-          if (userDoc.exists()) {
-            setUserProfile(userDoc.data() as UserProfile);
+          // التحقق أولاً من أن المستخدم إدمن
+          const adminData = await checkAdminStatus(user.uid);
+          if (adminData) {
+            setUserProfile(adminData);
           } else {
-            // Create fallback profile if document doesn't exist
-            const fallbackProfile: UserProfile = {
-              uid: user.uid,
-              email: user.email || '',
-              name: user.displayName || 'مستخدم',
-              userType: 'client',
-              verified: false
-            };
-            setUserProfile(fallbackProfile);
+            // جلب بيانات المستخدم العادي
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            if (userDoc.exists()) {
+              setUserProfile(userDoc.data() as UserProfile);
+            } else {
+              // إنشاء ملف احتياطي
+              const fallbackProfile: ClientData = {
+                uid: user.uid,
+                email: user.email || '',
+                name: user.displayName || 'مستخدم',
+                userType: 'client',
+                phone: '+966501234567',
+                location: 'الرياض',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                verified: false,
+                status: 'active',
+                notifications: {
+                  email: true,
+                  sms: true,
+                  push: true,
+                },
+              };
+              setUserProfile(fallbackProfile);
+            }
           }
         } catch (error) {
           console.error('Error fetching user profile:', error);
-          // Create fallback profile on permission error
-          const fallbackProfile: UserProfile = {
+          // إنشاء ملف احتياطي في حالة الخطأ
+          const fallbackProfile: ClientData = {
             uid: user.uid,
             email: user.email || '',
             name: user.displayName || 'مستخدم',
             userType: 'client',
             phone: '+966501234567',
             location: 'الرياض',
-            verified: false
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            verified: false,
+            status: 'active',
+            notifications: {
+              email: true,
+              sms: true,
+              push: true,
+            },
           };
           setUserProfile(fallbackProfile);
         }

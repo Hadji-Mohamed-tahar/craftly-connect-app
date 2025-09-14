@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ArrowLeft, Save, User, Phone, MapPin, Wrench, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { CrafterData } from '../lib/userDataStructure';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
@@ -14,8 +15,8 @@ const EditProfile: React.FC = () => {
     name: userProfile?.name || '',
     phone: userProfile?.phone || '',
     location: userProfile?.location || '',
-    specialty: userProfile?.specialty || '',
-    experience: userProfile?.experience || ''
+    specialty: (userProfile?.userType === 'crafter' ? (userProfile as CrafterData).specialty : '') || '',
+    experience: (userProfile?.userType === 'crafter' ? (userProfile as CrafterData).experience : '') || ''
   });
 
   const specialties = [
@@ -220,10 +221,10 @@ const EditProfile: React.FC = () => {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center gap-2">
                       <Star className="w-4 h-4 text-yellow-500" />
-                      <span>التقييم: {userProfile.rating || 0}/5</span>
+                      <span>التقييم: {userProfile.userType === 'crafter' ? (userProfile as CrafterData).rating || 0 : 0}/5</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span>الطلبات المكتملة: {userProfile.completedOrders || 0}</span>
+                      <span>الطلبات المكتملة: {userProfile.userType === 'crafter' ? (userProfile as CrafterData).completedOrders || 0 : 0}</span>
                     </div>
                   </div>
                 </div>

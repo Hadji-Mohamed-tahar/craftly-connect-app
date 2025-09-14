@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { CrafterData } from '../lib/userDataStructure';
 import { collection, doc, addDoc, updateDoc, onSnapshot, query, where, orderBy, getDocs, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from './AuthContext';
@@ -228,8 +229,9 @@ export const ProposalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       ...proposalData,
       crafterId: currentUser.uid,
       crafterName: userProfile.name,
-      crafterSpecialty: userProfile.specialty || 'حرفي',
-      crafterRating: userProfile.rating || 0,
+      // إضافة معلومات الحرفي إذا كان من نوع حرفي
+      crafterSpecialty: userProfile.userType === 'crafter' ? (userProfile as CrafterData).specialty || 'حرفي' : 'حرفي',
+      crafterRating: userProfile.userType === 'crafter' ? (userProfile as CrafterData).rating || 0 : 0,
       status: 'pending' as const,
       createdAt: new Date().toISOString()
     };
