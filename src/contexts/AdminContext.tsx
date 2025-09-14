@@ -59,7 +59,14 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Check if user is admin (you can add admin emails here)
     if (userProfile) {
       const adminEmails = ['admin@craft.com', 'admin@example.com'];
-      setIsAdmin(adminEmails.includes(userProfile.email));
+      console.log('Checking admin status for:', userProfile.email);
+      console.log('Admin emails:', adminEmails);
+      const isUserAdmin = adminEmails.includes(userProfile.email);
+      console.log('Is admin:', isUserAdmin);
+      setIsAdmin(isUserAdmin);
+    } else {
+      console.log('No user profile found');
+      setIsAdmin(false);
     }
   }, [userProfile]);
 
