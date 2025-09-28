@@ -27,14 +27,14 @@ export default function AdminLayout() {
   }
 
   return (
-    <SidebarProvider defaultOpen={true}>
+    <SidebarProvider defaultOpen={true} open={true}>
       <div className="min-h-screen flex w-full bg-background admin-layout">
         <AdminSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <header className="admin-header sticky top-0 z-40 w-full border-b">
             <div className="flex h-12 sm:h-14 items-center justify-between px-3 sm:px-4">
               <div className="flex items-center gap-2 sm:gap-4">
-                <SidebarTrigger className="lg:hidden" />
+                <SidebarTrigger />
                 <h2 className="font-semibold text-sm sm:text-base">نظام إدارة المنصة</h2>
               </div>
               <Button

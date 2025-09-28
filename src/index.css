@@ -351,3 +351,20 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
     z-index: 50;
   }
 }
+
+/* Force sidebar visibility on desktop */
+@media (min-width: 1024px) {
+  [data-sidebar="sidebar"] {
+    display: flex !important;
+    position: relative !important;
+    transform: translateX(0) !important;
+  }
+  
+  [data-sidebar="sidebar"][data-state="collapsed"] {
+    width: 4rem !important;
+  }
+  
+  [data-sidebar="sidebar"]:not([data-state="collapsed"]) {
+    width: 16rem !important;
+  }
+}
