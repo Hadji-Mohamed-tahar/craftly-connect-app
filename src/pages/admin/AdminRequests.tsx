@@ -77,25 +77,32 @@ export default function AdminRequests() {
   };
 
   if (loading) {
-    return <div className="p-6">جاري التحميل...</div>;
+    return (
+      <div className="p-3 sm:p-6">
+        <div className="animate-fade-in admin-loading">
+          <div className="w-6 h-6 border-4 border-primary border-t-transparent rounded-full animate-spin ml-2"></div>
+          <span>جاري تحميل البيانات...</span>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">إدارة الطلبات</h1>
-        <div className="flex items-center gap-2">
+    <div className="p-3 sm:p-6 space-y-4 sm:space-y-6 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h1 className="text-xl sm:text-2xl font-bold">إدارة الطلبات</h1>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           <div className="relative">
             <Search className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="البحث في الطلبات..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pr-8 w-64"
+              className="pr-8 w-full sm:w-64"
             />
           </div>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full sm:w-40">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -109,7 +116,7 @@ export default function AdminRequests() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="admin-grid sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="p-4">
             <div className="text-center">
@@ -152,12 +159,12 @@ export default function AdminRequests() {
         </Card>
       </div>
 
-      <Card>
+      <Card className="admin-card">
         <CardHeader>
           <CardTitle>قائمة الطلبات ({filteredRequests.length})</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Table>
+        <CardContent className="table-container">
+          <Table className="admin-table">
             <TableHeader>
               <TableRow>
                 <TableHead>عنوان الطلب</TableHead>

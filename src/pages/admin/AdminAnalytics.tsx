@@ -9,7 +9,14 @@ export default function AdminAnalytics() {
   const { stats, users, requests, orders, loading } = useAdmin();
 
   if (loading) {
-    return <div className="p-6">جاري التحميل...</div>;
+    return (
+      <div className="p-3 sm:p-6">
+        <div className="animate-fade-in admin-loading">
+          <div className="w-6 h-6 border-4 border-primary border-t-transparent rounded-full animate-spin ml-2"></div>
+          <span>جاري تحميل البيانات...</span>
+        </div>
+      </div>
+    );
   }
 
   // Calculate additional metrics
@@ -33,13 +40,13 @@ export default function AdminAnalytics() {
     .slice(0, 5);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-3 sm:p-6 space-y-4 sm:space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">التقارير والإحصائيات</h1>
+        <h1 className="text-xl sm:text-2xl font-bold">التقارير والإحصائيات</h1>
       </div>
 
       {/* Key Metrics */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="admin-grid">
         <StatsCard
           title="معدل التحويل"
           value={`${conversionRate.toFixed(1)}%`}
@@ -70,7 +77,7 @@ export default function AdminAnalytics() {
       </div>
 
       {/* Charts and Analytics */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
         
         {/* Monthly Growth Chart */}
         <Card>

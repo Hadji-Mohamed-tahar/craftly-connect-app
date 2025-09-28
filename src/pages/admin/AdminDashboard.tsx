@@ -27,22 +27,22 @@ export default function AdminDashboard() {
   const activeOrders = orders.filter(order => order.status === 'inProgress').slice(-5);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-3 sm:p-6 space-y-4 sm:space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">لوحة التحكم الإدارية</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold">لوحة التحكم الإدارية</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
             إدارة شاملة لجميع عمليات المنصة
           </p>
         </div>
-        <Button onClick={() => window.location.reload()}>
+        <Button onClick={() => window.location.reload()} className="w-full sm:w-auto">
           تحديث البيانات
         </Button>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="admin-grid">
         <StatsCard
           title="إجمالي المستخدمين"
           value={stats.totalUsers}
@@ -99,7 +99,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Recent Activity Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
         
         {/* Recent Users */}
         <Card>

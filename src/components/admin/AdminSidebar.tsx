@@ -40,39 +40,9 @@ const adminMenuItems = [
     icon: FileText,
   },
   {
-    title: 'إدارة الطلبات النشطة',
-    url: '/admin/orders',
-    icon: ShoppingCart,
-  },
-  {
-    title: 'المحادثات',
-    url: '/admin/chats',
-    icon: MessageSquare,
-  },
-  {
     title: 'التقارير والإحصائيات',
     url: '/admin/analytics',
     icon: BarChart3,
-  },
-  {
-    title: 'المدفوعات',
-    url: '/admin/payments',
-    icon: CreditCard,
-  },
-  {
-    title: 'الإشعارات',
-    url: '/admin/notifications',
-    icon: Bell,
-  },
-  {
-    title: 'الأمان',
-    url: '/admin/security',
-    icon: Shield,
-  },
-  {
-    title: 'الإعدادات',
-    url: '/admin/settings',
-    icon: Settings,
   },
 ];
 
@@ -81,7 +51,7 @@ export function AdminSidebar() {
     <Sidebar className="border-l border-border">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-lg font-bold text-primary">
+          <SidebarGroupLabel className="text-base sm:text-lg font-bold text-primary px-2">
             لوحة الإدارة
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -93,15 +63,15 @@ export function AdminSidebar() {
                       to={item.url}
                       end={item.url === '/admin'}
                       className={({ isActive }) =>
-                        `flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
+                        `flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 ${
                           isActive
-                            ? 'bg-primary text-primary-foreground font-medium'
-                            : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                            ? 'bg-primary text-primary-foreground font-medium shadow-sm'
+                            : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:scale-[1.02]'
                         }`
                       }
                     >
-                      <item.icon size={20} />
-                      <span>{item.title}</span>
+                      <item.icon size={18} className="sm:size-5" />
+                      <span className="text-sm sm:text-base">{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
