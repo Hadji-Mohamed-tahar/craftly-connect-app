@@ -48,17 +48,17 @@ const adminMenuItems = [
 
 export function AdminSidebar() {
   return (
-    <Sidebar className="border-l border-border">
+    <Sidebar className="border-l border-border" collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-base sm:text-lg font-bold text-primary px-2">
+          <SidebarGroupLabel className="text-base sm:text-lg font-bold text-primary px-2 py-4">
             لوحة الإدارة
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {adminMenuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild tooltip={item.title}>
                     <NavLink
                       to={item.url}
                       end={item.url === '/admin'}
@@ -70,8 +70,8 @@ export function AdminSidebar() {
                         }`
                       }
                     >
-                      <item.icon size={18} className="sm:size-5" />
-                      <span className="text-sm sm:text-base">{item.title}</span>
+                      <item.icon size={18} className="shrink-0" />
+                      <span className="text-sm sm:text-base truncate">{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
