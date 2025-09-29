@@ -37,11 +37,15 @@ export default function AdminUsers() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
 
+  // استبعاد حسابات الإدارة من قائمة المستخدمين
+  const adminEmails = ['admin@craft.com', 'admin@example.com'];
+  
   const filteredUsers = users.filter(user => {
+    const isNotAdmin = !adminEmails.includes(user.email);
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterType === 'all' || user.userType === filterType;
-    return matchesSearch && matchesFilter;
+    return isNotAdmin && matchesSearch && matchesFilter;
   });
 
   const handleVerifyUser = async (userId: string, verified: boolean) => {

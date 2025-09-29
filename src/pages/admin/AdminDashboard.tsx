@@ -6,9 +6,43 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAdmin } from '@/contexts/AdminContext';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AdminDashboard() {
-  const { stats, loading, users, requests, orders } = useAdmin();
+  const { stats, loading, users, requests, orders, updateRequestStatus } = useAdmin();
+  const { toast } = useToast();
+
+  const approveRequest = async (requestId: string) => {
+    try {
+      await updateRequestStatus(requestId, 'approved');
+      toast({
+        title: 'تم قبول الطلب',
+        description: 'تم الموافقة على الطلب بنجاح',
+      });
+    } catch (error) {
+      toast({
+        title: 'حدث خطأ',
+        description: 'فشل في الموافقة على الطلب',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const rejectRequest = async (requestId: string) => {
+    try {
+      await updateRequestStatus(requestId, 'rejected');
+      toast({
+        title: 'تم رفض الطلب',
+        description: 'تم رفض الطلب',
+      });
+    } catch (error) {
+      toast({
+        title: 'حدث خطأ',
+        description: 'فشل في رفض الطلب',
+        variant: 'destructive',
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -132,20 +166,44 @@ export default function AdminDashboard() {
               <AlertCircle size={20} />
               الطلبات المعلقة
             </CardTitle>
-            <CardDescription>تحتاج إلى مراجعة</CardDescription>
+            <CardDescription>تحتاج إلى موافقة الإدارة</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {pendingRequests.map((request) => (
-              <div key={request.id} className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium line-clamp-1">{request.title}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {new Date(request.createdAt).toLocaleDateString('ar-SA')}
-                  </p>
+            {pendingRequests.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                لا توجد طلبات معلقة
+              </p>
+            ) : (
+              pendingRequests.map((request) => (
+                <div key={request.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex-1">
+                    <p className="font-medium line-clamp-1">{request.title}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(request.createdAt).toLocaleDateString('ar-SA')}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      من: {request.clientName || 'غير محدد'}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      onClick={() => approveRequest(request.id)}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      موافقة
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => rejectRequest(request.id)}
+                    >
+                      رفض
+                    </Button>
+                  </div>
                 </div>
-                <Badge variant="outline">معلق</Badge>
-              </div>
-            ))}
+              ))
+            )}
           </CardContent>
         </Card>
 

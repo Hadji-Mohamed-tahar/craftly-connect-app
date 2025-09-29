@@ -4,7 +4,7 @@ import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
 import { CheckCircle, Clock, Play, Flag, Star } from 'lucide-react';
 
-export type OrderProgressStatus = 'pending' | 'accepted' | 'in_progress' | 'completed' | 'rated' | 'cancelled';
+export type OrderProgressStatus = 'pending' | 'approved' | 'accepted' | 'in_progress' | 'completed' | 'rated' | 'cancelled';
 
 interface OrderProgressProps {
   status: OrderProgressStatus;
@@ -20,11 +20,13 @@ const OrderProgress: React.FC<OrderProgressProps> = ({
   const getProgressValue = () => {
     switch (status) {
       case 'pending':
-        return 10;
+        return 5;
+      case 'approved':
+        return 15;
       case 'accepted':
-        return 25;
+        return 35;
       case 'in_progress':
-        return 60;
+        return 65;
       case 'completed':
         return 85;
       case 'rated':
@@ -41,9 +43,16 @@ const OrderProgress: React.FC<OrderProgressProps> = ({
       case 'pending':
         return {
           label: 'طلب مرسل',
-          description: 'تم إرسال الطلب وهو في انتظار عروض الحرفيين',
+          description: 'تم إرسال الطلب وهو في انتظار موافقة الإدارة',
           color: 'bg-yellow-100 text-yellow-800',
           icon: Clock
+        };
+      case 'approved':
+        return {
+          label: 'تمت الموافقة',
+          description: 'وافقت الإدارة على الطلب وهو متاح للحرفيين',
+          color: 'bg-orange-100 text-orange-800',
+          icon: CheckCircle
         };
       case 'accepted':
         return {
@@ -94,7 +103,8 @@ const OrderProgress: React.FC<OrderProgressProps> = ({
   const StatusIcon = statusInfo.icon;
 
   const steps = [
-    { key: 'pending', label: 'طلب مرسل', completed: ['accepted', 'in_progress', 'completed', 'rated'].includes(status) },
+    { key: 'pending', label: 'طلب مرسل', completed: ['approved', 'accepted', 'in_progress', 'completed', 'rated'].includes(status) },
+    { key: 'approved', label: 'موافقة الإدارة', completed: ['accepted', 'in_progress', 'completed', 'rated'].includes(status) },
     { key: 'accepted', label: 'تم القبول', completed: ['in_progress', 'completed', 'rated'].includes(status) },
     { key: 'in_progress', label: 'قيد التنفيذ', completed: ['completed', 'rated'].includes(status) },
     { key: 'completed', label: 'مكتمل', completed: ['rated'].includes(status) },
