@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -18,6 +19,7 @@ const ProposalsList: React.FC<ProposalsListProps> = ({
   title = "العروض المستلمة",
   showAcceptReject = false
 }) => {
+  const navigate = useNavigate();
   const { userProfile } = useAuth();
   const { acceptProposal, rejectProposal } = useProposals();
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
@@ -160,7 +162,11 @@ const ProposalsList: React.FC<ProposalsListProps> = ({
                   )}
 
                   <div className="flex gap-2 pt-2">
-                    <Button variant="outline" className="flex-1">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => navigate(`/chat/${proposal.requestId}`)}
+                    >
                       <MessageCircle className="w-4 h-4 mr-2" />
                       محادثة
                     </Button>

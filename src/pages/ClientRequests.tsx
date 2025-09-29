@@ -59,11 +59,18 @@ const ClientRequests: React.FC = () => {
             </TabsContent>
 
             <TabsContent value="proposals" className="mt-6">
-              <ProposalsList 
-                proposals={clientProposals}
-                title="العروض المستلمة"
-                showAcceptReject={true}
-              />
+              <div className="space-y-6">
+                <div className="bg-white rounded-xl p-6 shadow-sm">
+                  <h2 className="text-xl font-bold text-gray-900 mb-4">العروض المستلمة</h2>
+                  <p className="text-gray-600 mb-6">اختر من بين العروض المقدمة من الحرفيين لطلباتك المعتمدة</p>
+                  
+                  <ProposalsList 
+                    proposals={clientProposals}
+                    title=""
+                    showAcceptReject={true}
+                  />
+                </div>
+              </div>
             </TabsContent>
 
             <TabsContent value="new-request" className="mt-6">

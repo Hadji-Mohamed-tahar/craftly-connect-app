@@ -17,6 +17,7 @@ import Chat from "./pages/Chat";
 import RateOrder from "./pages/RateOrder";
 import ClientRequests from "./pages/ClientRequests";
 import CrafterRequests from "./pages/CrafterRequests";
+import RequestDetail from "./pages/RequestDetail";
 import Subscription from "./pages/Subscription";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
@@ -71,8 +72,9 @@ const AppContent = () => {
           <Route path="/crafter-profile" element={<CrafterProfile />} />
           <Route path="/chat/:orderId" element={<Chat />} />
           <Route path="/rate-order/:id" element={<RateOrder />} />
-          <Route path="/client-requests" element={<ClientRequests />} />
-          <Route path="/crafter-requests" element={<CrafterRequests />} />
+                    <Route path="/client-requests" element={<ClientRequests />} />
+                    <Route path="/request/:id" element={<RequestDetail />} />
+                    <Route path="/crafter-requests" element={<CrafterRequests />} />
           <Route path="/subscription" element={<Subscription />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/edit-profile" element={<EditProfile />} />

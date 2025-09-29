@@ -28,7 +28,7 @@ export interface ServiceRequest {
   images?: string[];
   clientId: string;
   clientName: string;
-  status: 'open' | 'closed' | 'in_progress' | 'completed' | 'cancelled';
+  status: 'pending' | 'open' | 'closed' | 'in_progress' | 'completed' | 'cancelled';
   acceptedProposalId?: string;
   createdAt: string;
   completedAt?: string;
@@ -209,7 +209,7 @@ export const ProposalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       ...requestData,
       clientId: currentUser.uid,
       clientName: userProfile.name,
-      status: 'open' as const,
+      status: 'pending' as const,  // تغيير الحالة إلى معلق في انتظار موافقة الإدارة
       createdAt: new Date().toISOString()
     };
 
