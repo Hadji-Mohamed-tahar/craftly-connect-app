@@ -14,10 +14,10 @@ export default function AdminDashboard() {
 
   const approveRequest = async (requestId: string) => {
     try {
-      await updateRequestStatus(requestId, 'approved');
+      await updateRequestStatus(requestId, 'open');
       toast({
         title: 'تم قبول الطلب',
-        description: 'تم الموافقة على الطلب بنجاح',
+        description: 'تم الموافقة على الطلب بنجاح وأصبح متاحاً للحرفيين',
       });
     } catch (error) {
       toast({
@@ -30,10 +30,10 @@ export default function AdminDashboard() {
 
   const rejectRequest = async (requestId: string) => {
     try {
-      await updateRequestStatus(requestId, 'rejected');
+      await updateRequestStatus(requestId, 'cancelled');
       toast({
         title: 'تم رفض الطلب',
-        description: 'تم رفض الطلب',
+        description: 'تم رفض الطلب وإلغاؤه',
       });
     } catch (error) {
       toast({

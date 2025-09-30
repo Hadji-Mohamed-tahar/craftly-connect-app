@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -6,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Textarea } from './ui/textarea';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { MapPin, Clock, User, MessageCircle, DollarSign, CheckCircle, AlertCircle } from 'lucide-react';
+import { MapPin, Clock, User, MessageCircle, DollarSign, CheckCircle, AlertCircle, Eye } from 'lucide-react';
 import { useProposals, ServiceRequest } from '../contexts/ProposalContext';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -21,6 +22,7 @@ const RequestsList: React.FC<RequestsListProps> = ({
   showProposalButton = false,
   title = "الطلبات المتاحة"
 }) => {
+  const navigate = useNavigate();
   const { userProfile } = useAuth();
   const { createProposal } = useProposals();
   const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
@@ -37,8 +39,10 @@ const RequestsList: React.FC<RequestsListProps> = ({
 
   const getStatusBadge = (status: ServiceRequest['status']) => {
     switch (status) {
+      case 'pending':
+        return <Badge variant="default" className="bg-yellow-100 text-yellow-800">في انتظار الموافقة</Badge>;
       case 'open':
-        return <Badge variant="default" className="bg-green-100 text-green-800">مفتوح</Badge>;
+        return <Badge variant="default" className="bg-green-100 text-green-800">مفتوح للعروض</Badge>;
       case 'closed':
         return <Badge variant="secondary">مغلق</Badge>;
       case 'in_progress':
@@ -170,8 +174,19 @@ const RequestsList: React.FC<RequestsListProps> = ({
                     </div>
                   )}
 
-                  {showProposalButton && userProfile?.userType === 'crafter' && request.status === 'open' && (
-                    <div className="flex gap-2 pt-2">
+                  <div className="flex gap-2 pt-2">
+                    {/* زر عرض التفاصيل متاح للجميع */}
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate(`/request/${request.id}`)}
+                      className="flex-1"
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      عرض التفاصيل
+                    </Button>
+
+                    {/* زر تقديم عرض للحرفيين فقط */}
+                    {showProposalButton && userProfile?.userType === 'crafter' && request.status === 'open' && (
                       <Button 
                         onClick={() => handleProposal(request)}
                         className="flex-1"
@@ -179,12 +194,8 @@ const RequestsList: React.FC<RequestsListProps> = ({
                         <DollarSign className="w-4 h-4 mr-2" />
                         تقديم عرض
                       </Button>
-                      <Button variant="outline" className="flex-1">
-                        <MessageCircle className="w-4 h-4 mr-2" />
-                        بدء محادثة
-                      </Button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>

@@ -4,7 +4,7 @@ import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
 import { CheckCircle, Clock, Play, Flag, Star } from 'lucide-react';
 
-export type OrderProgressStatus = 'pending' | 'approved' | 'accepted' | 'in_progress' | 'completed' | 'rated' | 'cancelled';
+export type OrderProgressStatus = 'pending' | 'open' | 'closed' | 'in_progress' | 'completed' | 'rated' | 'cancelled';
 
 interface OrderProgressProps {
   status: OrderProgressStatus;
@@ -20,11 +20,11 @@ const OrderProgress: React.FC<OrderProgressProps> = ({
   const getProgressValue = () => {
     switch (status) {
       case 'pending':
-        return 5;
-      case 'approved':
-        return 15;
-      case 'accepted':
-        return 35;
+        return 10;
+      case 'open':
+        return 25;
+      case 'closed':
+        return 45;
       case 'in_progress':
         return 65;
       case 'completed':
@@ -42,36 +42,36 @@ const OrderProgress: React.FC<OrderProgressProps> = ({
     switch (status) {
       case 'pending':
         return {
-          label: 'طلب مرسل',
+          label: 'في انتظار الموافقة',
           description: 'تم إرسال الطلب وهو في انتظار موافقة الإدارة',
           color: 'bg-yellow-100 text-yellow-800',
           icon: Clock
         };
-      case 'approved':
+      case 'open':
         return {
-          label: 'تمت الموافقة',
-          description: 'وافقت الإدارة على الطلب وهو متاح للحرفيين',
-          color: 'bg-orange-100 text-orange-800',
+          label: 'متاح للحرفيين',
+          description: 'وافقت الإدارة على الطلب وأصبح متاحاً لاستقبال عروض الحرفيين',
+          color: 'bg-blue-100 text-blue-800',
           icon: CheckCircle
         };
-      case 'accepted':
+      case 'closed':
         return {
-          label: 'تم قبول العرض',
-          description: 'تم قبول أحد العروض والاتفاق مع الحرفي',
-          color: 'bg-blue-100 text-blue-800',
+          label: 'تم اختيار حرفي',
+          description: 'تم قبول أحد العروض واختيار الحرفي المناسب',
+          color: 'bg-indigo-100 text-indigo-800',
           icon: CheckCircle
         };
       case 'in_progress':
         return {
-          label: 'العمل قيد التنفيذ',
-          description: 'بدأ الحرفي في تنفيذ العمل',
+          label: 'قيد التنفيذ',
+          description: 'بدأ الحرفي في تنفيذ العمل المطلوب',
           color: 'bg-purple-100 text-purple-800',
           icon: Play
         };
       case 'completed':
         return {
-          label: 'تم إنجاز العمل',
-          description: 'أنهى الحرفي العمل وهو في انتظار التقييم',
+          label: 'مكتمل',
+          description: 'أنهى الحرفي العمل وفي انتظار تقييمك',
           color: 'bg-green-100 text-green-800',
           icon: Flag
         };
@@ -79,12 +79,12 @@ const OrderProgress: React.FC<OrderProgressProps> = ({
         return {
           label: 'تم التقييم',
           description: 'تم إكمال الطلب وتقييم الحرفي بنجاح',
-          color: 'bg-green-100 text-green-800',
+          color: 'bg-emerald-100 text-emerald-800',
           icon: Star
         };
       case 'cancelled':
         return {
-          label: 'تم الإلغاء',
+          label: 'ملغي',
           description: 'تم إلغاء الطلب',
           color: 'bg-red-100 text-red-800',
           icon: Clock
@@ -103,9 +103,9 @@ const OrderProgress: React.FC<OrderProgressProps> = ({
   const StatusIcon = statusInfo.icon;
 
   const steps = [
-    { key: 'pending', label: 'طلب مرسل', completed: ['approved', 'accepted', 'in_progress', 'completed', 'rated'].includes(status) },
-    { key: 'approved', label: 'موافقة الإدارة', completed: ['accepted', 'in_progress', 'completed', 'rated'].includes(status) },
-    { key: 'accepted', label: 'تم القبول', completed: ['in_progress', 'completed', 'rated'].includes(status) },
+    { key: 'pending', label: 'في انتظار الموافقة', completed: ['open', 'closed', 'in_progress', 'completed', 'rated'].includes(status) },
+    { key: 'open', label: 'متاح للحرفيين', completed: ['closed', 'in_progress', 'completed', 'rated'].includes(status) },
+    { key: 'closed', label: 'تم اختيار حرفي', completed: ['in_progress', 'completed', 'rated'].includes(status) },
     { key: 'in_progress', label: 'قيد التنفيذ', completed: ['completed', 'rated'].includes(status) },
     { key: 'completed', label: 'مكتمل', completed: ['rated'].includes(status) },
     { key: 'rated', label: 'تم التقييم', completed: status === 'rated' }
