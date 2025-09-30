@@ -81,6 +81,7 @@ export const ProposalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     if (!currentUser || !userProfile) {
       setRequests([]);
+      setLoading(false);
       return;
     }
 
@@ -88,20 +89,23 @@ export const ProposalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     let requestsQuery;
 
     if (userProfile.userType === 'client') {
-      // العملاء يرون طلباتهم الخاصة فقط بجميع الحالات
+      // العملاء يرون طلباتهم الخاصة فقط
       requestsQuery = query(
         requestsRef,
-        where('clientId', '==', currentUser.uid),
-        orderBy('createdAt', 'desc')
+        where('clientId', '==', currentUser.uid)
+      );
+    } else if (userProfile.userType === 'crafter') {
+      // الحرفيون يرون فقط الطلبات المفتوحة
+      requestsQuery = query(
+        requestsRef,
+        where('status', '==', 'open')
       );
     } else {
-      // الحرفيون يرون فقط الطلبات المفتوحة (المعتمدة من الإدارة)
-      requestsQuery = query(
-        requestsRef,
-        where('status', '==', 'open'),
-        orderBy('createdAt', 'desc')
-      );
+      // افتراضياً، جلب جميع الطلبات
+      requestsQuery = query(requestsRef);
     }
+
+    console.log('Setting up requests listener for:', userProfile.userType);
 
     const unsubscribe = onSnapshot(requestsQuery, 
       (snapshot) => {
@@ -109,6 +113,18 @@ export const ProposalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           id: doc.id,
           ...doc.data()
         } as ServiceRequest));
+        
+        // ترتيب البيانات في الكود بدلاً من Firebase
+        requestsData.sort((a, b) => {
+          const dateA = new Date(a.createdAt).getTime();
+          const dateB = new Date(b.createdAt).getTime();
+          return dateB - dateA; // الأحدث أولاً
+        });
+        
+        console.log(`Received ${requestsData.length} requests for ${userProfile.userType}:`, 
+          requestsData.map(r => ({ id: r.id, status: r.status, title: r.title }))
+        );
+        
         setRequests(requestsData);
       },
       (error) => {
@@ -210,12 +226,15 @@ export const ProposalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       ...requestData,
       clientId: currentUser.uid,
       clientName: userProfile.name,
-      status: 'pending' as const,  // تغيير الحالة إلى معلق في انتظار موافقة الإدارة
+      status: 'pending' as const,
       createdAt: new Date().toISOString()
     };
 
+    console.log('Creating new request with status pending:', newRequest);
+
     try {
       const docRef = await addDoc(collection(db, 'requests'), newRequest);
+      console.log('Request created successfully with ID:', docRef.id);
       return docRef.id;
     } catch (error) {
       console.error('Error creating request:', error);

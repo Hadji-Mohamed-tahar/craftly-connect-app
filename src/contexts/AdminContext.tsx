@@ -106,10 +106,16 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // الاستماع للطلبات في الوقت الفعلي
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!isAdmin) {
+      console.log('Not admin, skipping requests listener');
+      return;
+    }
+
+    console.log('Setting up admin requests listener');
 
     const requestsRef = collection(db, 'requests');
-    const requestsQuery = query(requestsRef, orderBy('createdAt', 'desc'));
+    // جلب جميع الطلبات بدون أي فلترة أو ترتيب
+    const requestsQuery = query(requestsRef);
 
     const unsubscribe = onSnapshot(requestsQuery, 
       (snapshot) => {
@@ -117,6 +123,18 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           id: doc.id, 
           ...doc.data() 
         }));
+        
+        // الترتيب في الكود
+        requestsData.sort((a: any, b: any) => {
+          const dateA = new Date(a.createdAt || 0).getTime();
+          const dateB = new Date(b.createdAt || 0).getTime();
+          return dateB - dateA; // الأحدث أولاً
+        });
+        
+        console.log(`Admin received ${requestsData.length} requests:`, 
+          requestsData.map((r: any) => ({ id: r.id, status: r.status, title: r.title }))
+        );
+        
         setRequests(requestsData);
         
         // تحديث الإحصائيات

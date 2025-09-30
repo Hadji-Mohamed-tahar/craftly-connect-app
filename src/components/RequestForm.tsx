@@ -235,7 +235,7 @@ const RequestForm: React.FC = () => {
               <DialogTitle>تم إرسال الطلب بنجاح</DialogTitle>
             </div>
             <DialogDescription>
-              تم إرسال طلبك بنجاح. سيتم عرضه للحرفيين وستتلقى عروضاً قريباً.
+              تم إرسال طلبك بنجاح وهو الآن في انتظار موافقة الإدارة. سيتم إشعارك فور الموافقة عليه وسيصبح متاحاً للحرفيين.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end">
