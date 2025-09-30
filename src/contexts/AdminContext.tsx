@@ -73,15 +73,12 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const fetchStats = async () => {
     try {
       const usersSnapshot = await getDocs(collection(db, 'users'));
-      const requestsSnapshot = await getDocs(collection(db, 'requests'));
       const ordersSnapshot = await getDocs(collection(db, 'orders'));
 
       const usersData = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      const requestsData = requestsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const ordersData = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       setUsers(usersData);
-      setRequests(requestsData);
       setOrders(ordersData);
 
       const clients = usersData.filter((user: any) => user.userType === 'client');
@@ -93,7 +90,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         totalUsers: usersData.length,
         totalClients: clients.length,
         totalCrafters: crafters.length,
-        totalRequests: requestsData.length,
+        totalRequests: requests.length, // سيتم تحديثه من useEffect
         activeOrders: activeOrders.length,
         completedOrders: completedOrders.length,
         totalRevenue: completedOrders.reduce((sum: number, order: any) => sum + (order.amount || 0), 0),
@@ -106,6 +103,35 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setLoading(false);
     }
   };
+
+  // الاستماع للطلبات في الوقت الفعلي
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const requestsRef = collection(db, 'requests');
+    const requestsQuery = query(requestsRef, orderBy('createdAt', 'desc'));
+
+    const unsubscribe = onSnapshot(requestsQuery, 
+      (snapshot) => {
+        const requestsData = snapshot.docs.map(doc => ({ 
+          id: doc.id, 
+          ...doc.data() 
+        }));
+        setRequests(requestsData);
+        
+        // تحديث الإحصائيات
+        setStats(prev => ({
+          ...prev,
+          totalRequests: requestsData.length
+        }));
+      },
+      (error) => {
+        console.error('Error listening to requests:', error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [isAdmin]);
 
   const updateUserStatus = async (userId: string, status: any) => {
     try {
@@ -128,9 +154,10 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const updateRequestStatus = async (requestId: string, status: string) => {
     try {
       await updateDoc(doc(db, 'requests', requestId), { status });
-      await refreshData();
+      // لا حاجة لـ refreshData - البيانات تُحدّث تلقائياً عبر onSnapshot
     } catch (error) {
       console.error('Error updating request status:', error);
+      throw error;
     }
   };
 

@@ -88,16 +88,17 @@ export const ProposalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     let requestsQuery;
 
     if (userProfile.userType === 'client') {
-      // Clients see only their own requests
+      // العملاء يرون طلباتهم الخاصة فقط بجميع الحالات
       requestsQuery = query(
         requestsRef,
         where('clientId', '==', currentUser.uid),
         orderBy('createdAt', 'desc')
       );
     } else {
-      // Crafters see all open requests
+      // الحرفيون يرون فقط الطلبات المفتوحة (المعتمدة من الإدارة)
       requestsQuery = query(
         requestsRef,
+        where('status', '==', 'open'),
         orderBy('createdAt', 'desc')
       );
     }
