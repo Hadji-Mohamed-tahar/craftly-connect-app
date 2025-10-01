@@ -15,9 +15,6 @@ import CrafterSearchPage from "./pages/CrafterSearchPage";
 import CrafterProfile from "./pages/CrafterProfile";
 import Chat from "./pages/Chat";
 import RateOrder from "./pages/RateOrder";
-import ClientRequests from "./pages/ClientRequests";
-import CrafterRequests from "./pages/CrafterRequests";
-import RequestDetail from "./pages/RequestDetail";
 import Subscription from "./pages/Subscription";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
@@ -28,12 +25,10 @@ import AuthForm from "./components/AuthForm";
 import { InquiryProvider } from "./contexts/InquiryContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { FirebaseOrderProvider } from "./contexts/FirebaseOrderContext";
-import { ProposalProvider } from "./contexts/ProposalContext";
 import { AdminProvider } from "./contexts/AdminContext";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
-import AdminRequests from "./pages/admin/AdminRequests";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 
 const queryClient = new QueryClient();
@@ -72,9 +67,6 @@ const AppContent = () => {
           <Route path="/crafter-profile" element={<CrafterProfile />} />
           <Route path="/chat/:orderId" element={<Chat />} />
           <Route path="/rate-order/:id" element={<RateOrder />} />
-                    <Route path="/client-requests" element={<ClientRequests />} />
-                    <Route path="/request/:id" element={<RequestDetail />} />
-                    <Route path="/crafter-requests" element={<CrafterRequests />} />
           <Route path="/subscription" element={<Subscription />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/edit-profile" element={<EditProfile />} />
@@ -84,7 +76,6 @@ const AppContent = () => {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="users" element={<AdminUsers />} />
-            <Route path="requests" element={<AdminRequests />} />
             <Route path="analytics" element={<AdminAnalytics />} />
           </Route>
           
@@ -105,9 +96,7 @@ const App = () => (
         <AdminProvider>
           <InquiryProvider>
             <FirebaseOrderProvider>
-              <ProposalProvider>
-                <AppContent />
-              </ProposalProvider>
+              <AppContent />
             </FirebaseOrderProvider>
           </InquiryProvider>
         </AdminProvider>

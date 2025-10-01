@@ -7,7 +7,6 @@ interface AdminStats {
   totalUsers: number;
   totalClients: number;
   totalCrafters: number;
-  totalRequests: number;
   activeOrders: number;
   completedOrders: number;
   totalRevenue: number;
@@ -19,11 +18,9 @@ interface AdminContextType {
   stats: AdminStats;
   loading: boolean;
   users: any[];
-  requests: any[];
   orders: any[];
   updateUserStatus: (userId: string, status: any) => Promise<void>;
   deleteUser: (userId: string) => Promise<void>;
-  updateRequestStatus: (requestId: string, status: string) => Promise<void>;
   refreshData: () => Promise<void>;
 }
 
@@ -44,7 +41,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     totalUsers: 0,
     totalClients: 0,
     totalCrafters: 0,
-    totalRequests: 0,
     activeOrders: 0,
     completedOrders: 0,
     totalRevenue: 0,
@@ -52,7 +48,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   });
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<any[]>([]);
-  const [requests, setRequests] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
 
   useEffect(() => {
@@ -90,7 +85,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         totalUsers: usersData.length,
         totalClients: clients.length,
         totalCrafters: crafters.length,
-        totalRequests: requests.length, // سيتم تحديثه من useEffect
         activeOrders: activeOrders.length,
         completedOrders: completedOrders.length,
         totalRevenue: completedOrders.reduce((sum: number, order: any) => sum + (order.amount || 0), 0),
@@ -104,52 +98,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  // الاستماع للطلبات في الوقت الفعلي
-  useEffect(() => {
-    if (!isAdmin) {
-      console.log('Not admin, skipping requests listener');
-      return;
-    }
-
-    console.log('Setting up admin requests listener');
-
-    const requestsRef = collection(db, 'requests');
-    // جلب جميع الطلبات بدون أي فلترة أو ترتيب
-    const requestsQuery = query(requestsRef);
-
-    const unsubscribe = onSnapshot(requestsQuery, 
-      (snapshot) => {
-        const requestsData = snapshot.docs.map(doc => ({ 
-          id: doc.id, 
-          ...doc.data() 
-        }));
-        
-        // الترتيب في الكود
-        requestsData.sort((a: any, b: any) => {
-          const dateA = new Date(a.createdAt || 0).getTime();
-          const dateB = new Date(b.createdAt || 0).getTime();
-          return dateB - dateA; // الأحدث أولاً
-        });
-        
-        console.log(`Admin received ${requestsData.length} requests:`, 
-          requestsData.map((r: any) => ({ id: r.id, status: r.status, title: r.title }))
-        );
-        
-        setRequests(requestsData);
-        
-        // تحديث الإحصائيات
-        setStats(prev => ({
-          ...prev,
-          totalRequests: requestsData.length
-        }));
-      },
-      (error) => {
-        console.error('Error listening to requests:', error);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [isAdmin]);
 
   const updateUserStatus = async (userId: string, status: any) => {
     try {
@@ -169,15 +117,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  const updateRequestStatus = async (requestId: string, status: string) => {
-    try {
-      await updateDoc(doc(db, 'requests', requestId), { status });
-      // لا حاجة لـ refreshData - البيانات تُحدّث تلقائياً عبر onSnapshot
-    } catch (error) {
-      console.error('Error updating request status:', error);
-      throw error;
-    }
-  };
 
   const refreshData = async () => {
     setLoading(true);
@@ -195,11 +134,9 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     stats,
     loading,
     users,
-    requests,
     orders,
     updateUserStatus,
     deleteUser,
-    updateRequestStatus,
     refreshData
   };
 

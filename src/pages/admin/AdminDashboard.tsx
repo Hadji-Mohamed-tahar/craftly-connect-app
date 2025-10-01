@@ -9,40 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 
 export default function AdminDashboard() {
-  const { stats, loading, users, requests, orders, updateRequestStatus } = useAdmin();
-  const { toast } = useToast();
-
-  const approveRequest = async (requestId: string) => {
-    try {
-      await updateRequestStatus(requestId, 'open');
-      toast({
-        title: 'تم قبول الطلب',
-        description: 'تم الموافقة على الطلب بنجاح وأصبح متاحاً للحرفيين',
-      });
-    } catch (error) {
-      toast({
-        title: 'حدث خطأ',
-        description: 'فشل في الموافقة على الطلب',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const rejectRequest = async (requestId: string) => {
-    try {
-      await updateRequestStatus(requestId, 'cancelled');
-      toast({
-        title: 'تم رفض الطلب',
-        description: 'تم رفض الطلب وإلغاؤه',
-      });
-    } catch (error) {
-      toast({
-        title: 'حدث خطأ',
-        description: 'فشل في رفض الطلب',
-        variant: 'destructive',
-      });
-    }
-  };
+  const { stats, loading, users, orders } = useAdmin();
 
   if (loading) {
     return (
@@ -57,7 +24,6 @@ export default function AdminDashboard() {
   }
 
   const recentUsers = users.slice(-5).reverse();
-  const pendingRequests = requests.filter(req => req.status === 'pending').slice(-5);
   const activeOrders = orders.filter(order => order.status === 'inProgress').slice(-5);
 
   return (
@@ -98,7 +64,7 @@ export default function AdminDashboard() {
         />
         <StatsCard
           title="الطلبات الكلية"
-          value={stats.totalRequests}
+          value={orders.length}
           description="جميع طلبات الخدمات"
           icon={FileText}
           trend={{ value: 8, isPositive: true }}
@@ -133,7 +99,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Recent Activity Grid */}
-      <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
         
         {/* Recent Users */}
         <Card>
@@ -156,54 +122,6 @@ export default function AdminDashboard() {
                 </Badge>
               </div>
             ))}
-          </CardContent>
-        </Card>
-
-        {/* Pending Requests */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertCircle size={20} />
-              الطلبات المعلقة
-            </CardTitle>
-            <CardDescription>تحتاج إلى موافقة الإدارة</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {pendingRequests.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                لا توجد طلبات معلقة
-              </p>
-            ) : (
-              pendingRequests.map((request) => (
-                <div key={request.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex-1">
-                    <p className="font-medium line-clamp-1">{request.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(request.createdAt).toLocaleDateString('ar-SA')}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      من: {request.clientName || 'غير محدد'}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      size="sm" 
-                      onClick={() => approveRequest(request.id)}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      موافقة
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => rejectRequest(request.id)}
-                    >
-                      رفض
-                    </Button>
-                  </div>
-                </div>
-              ))
-            )}
           </CardContent>
         </Card>
 

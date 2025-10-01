@@ -35,11 +35,6 @@ const adminMenuItems = [
     icon: Users,
   },
   {
-    title: 'إدارة الطلبات',
-    url: '/admin/requests',
-    icon: FileText,
-  },
-  {
     title: 'التقارير والإحصائيات',
     url: '/admin/analytics',
     icon: BarChart3,

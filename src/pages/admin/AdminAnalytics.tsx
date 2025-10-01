@@ -6,7 +6,7 @@ import { StatsCard } from '@/components/admin/StatsCard';
 import { Progress } from '@/components/ui/progress';
 
 export default function AdminAnalytics() {
-  const { stats, users, requests, orders, loading } = useAdmin();
+  const { stats, users, orders, loading } = useAdmin();
 
   if (loading) {
     return (
@@ -20,7 +20,8 @@ export default function AdminAnalytics() {
   }
 
   // Calculate additional metrics
-  const conversionRate = stats.totalRequests > 0 ? (stats.completedOrders / stats.totalRequests) * 100 : 0;
+  const totalOrders = orders.length;
+  const conversionRate = totalOrders > 0 ? (stats.completedOrders / totalOrders) * 100 : 0;
   const averageOrderValue = stats.completedOrders > 0 ? stats.totalRevenue / stats.completedOrders : 0;
   
   // User registration trends (mock data for demo)
