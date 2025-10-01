@@ -60,7 +60,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    console.log('Setting up auth listener...');
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log('Auth state changed - user:', user ? user.email : 'null');
       setCurrentUser(user);
       
       if (user) {
@@ -68,13 +70,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // التحقق أولاً من أن المستخدم إدمن
           const adminData = await checkAdminStatus(user.uid);
           if (adminData) {
+            console.log('User is admin');
             setUserProfile(adminData);
           } else {
             // جلب بيانات المستخدم العادي
             const userDoc = await getDoc(doc(db, 'users', user.uid));
             if (userDoc.exists()) {
+              console.log('User profile loaded from Firestore');
               setUserProfile(userDoc.data() as UserProfile);
             } else {
+              console.log('Creating fallback profile - user doc not found');
               // إنشاء ملف احتياطي
               const fallbackProfile: ClientData = {
                 uid: user.uid,
@@ -119,9 +124,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUserProfile(fallbackProfile);
         }
       } else {
+        console.log('No user - clearing profile');
         setUserProfile(null);
       }
       
+      console.log('Setting loading to false');
       setLoading(false);
     });
 

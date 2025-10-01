@@ -31,10 +31,18 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const AppContent = () => {
   const { currentUser, loading } = useAuth();
+
+  console.log('AppContent rendered - loading:', loading, 'currentUser:', currentUser ? 'exists' : 'null');
 
   if (loading) {
     return (
