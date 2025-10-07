@@ -5,22 +5,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
-import Orders from "./pages/Orders";
-import OrderDetail from "./pages/OrderDetail";
-import CreateOrder from "./pages/CreateOrder";
-import CrafterSearchPage from "./pages/CrafterSearchPage";
-import CrafterProfile from "./pages/CrafterProfile";
-import Chat from "./pages/Chat";
-import RateOrder from "./pages/RateOrder";
-import Subscription from "./pages/Subscription";
-import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import BottomNavigation from "./components/BottomNavigation";
 import AuthForm from "./components/AuthForm";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import { FirebaseOrderProvider } from "./contexts/FirebaseOrderContext";
 import { AdminProvider } from "./contexts/AdminContext";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -61,15 +51,6 @@ const AppContent = () => {
         <Routes>
           {/* Regular App Routes */}
           <Route path="/" element={<Home />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/order/:id" element={<OrderDetail />} />
-          <Route path="/create-order" element={<CreateOrder />} />
-          <Route path="/search-crafters" element={<CrafterSearchPage />} />
-          <Route path="/crafter-profile" element={<CrafterProfile />} />
-          <Route path="/chat/:orderId" element={<Chat />} />
-          <Route path="/rate-order/:id" element={<RateOrder />} />
-          <Route path="/subscription" element={<Subscription />} />
-          <Route path="/profile" element={<Profile />} />
           <Route path="/edit-profile" element={<EditProfile />} />
           <Route path="/settings" element={<Settings />} />
           
@@ -95,9 +76,7 @@ const App = () => (
       <Sonner />
       <AuthProvider>
         <AdminProvider>
-          <FirebaseOrderProvider>
-            <AppContent />
-          </FirebaseOrderProvider>
+          <AppContent />
         </AdminProvider>
       </AuthProvider>
     </TooltipProvider>
