@@ -5,9 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
-import Inquiries from "./pages/Inquiries";
-import InquiryDetail from "./pages/InquiryDetail";
-import CreateInquiry from "./pages/CreateInquiry";
 import Orders from "./pages/Orders";
 import OrderDetail from "./pages/OrderDetail";
 import CreateOrder from "./pages/CreateOrder";
@@ -22,7 +19,6 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import BottomNavigation from "./components/BottomNavigation";
 import AuthForm from "./components/AuthForm";
-import { InquiryProvider } from "./contexts/InquiryContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { FirebaseOrderProvider } from "./contexts/FirebaseOrderContext";
 import { AdminProvider } from "./contexts/AdminContext";
@@ -65,9 +61,6 @@ const AppContent = () => {
         <Routes>
           {/* Regular App Routes */}
           <Route path="/" element={<Home />} />
-          <Route path="/inquiries" element={<Inquiries />} />
-          <Route path="/inquiry/:id" element={<InquiryDetail />} />
-          <Route path="/create" element={<CreateInquiry />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/order/:id" element={<OrderDetail />} />
           <Route path="/create-order" element={<CreateOrder />} />
@@ -102,11 +95,9 @@ const App = () => (
       <Sonner />
       <AuthProvider>
         <AdminProvider>
-          <InquiryProvider>
-            <FirebaseOrderProvider>
-              <AppContent />
-            </FirebaseOrderProvider>
-          </InquiryProvider>
+          <FirebaseOrderProvider>
+            <AppContent />
+          </FirebaseOrderProvider>
         </AdminProvider>
       </AuthProvider>
     </TooltipProvider>

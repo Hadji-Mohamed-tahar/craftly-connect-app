@@ -13,9 +13,7 @@ const BottomNavigation: React.FC = () => {
 
   const navItems = [
     { icon: Home, label: 'الرئيسية', path: '/' },
-    { icon: MessageSquare, label: 'الاستفسارات', path: '/inquiries' },
     { icon: Package, label: 'الطلبات', path: '/orders' },
-    ...(userProfile?.userType === 'client' ? [{ icon: Plus, label: 'طلب جديد', path: '/create-order' }] : []),
     { icon: User, label: 'الملف الشخصي', path: '/profile' }
   ];
 
