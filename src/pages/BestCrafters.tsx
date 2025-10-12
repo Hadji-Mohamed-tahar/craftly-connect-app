@@ -23,27 +23,42 @@ const BestCrafters: React.FC = () => {
   const fetchBestCrafters = async () => {
     setLoading(true);
     try {
-      const craftersRef = collection(db, 'users');
-      let q = query(
-        craftersRef,
-        where('userType', '==', 'crafter'),
-        where('status', '==', 'active')
-      );
+      // Get featured crafters UIDs
+      const featuredRef = collection(db, 'featured_crafters');
+      const featuredSnapshot = await getDocs(featuredRef);
+      const featuredUIDs = featuredSnapshot.docs.map(doc => doc.data().crafter_uid);
 
-      if (selectedSpecialty !== 'all') {
-        q = query(q, where('specialty', '==', selectedSpecialty));
+      if (featuredUIDs.length === 0) {
+        setCrafters([]);
+        setLoading(false);
+        return;
       }
 
-      const querySnapshot = await getDocs(q);
-      let craftersData: CrafterData[] = [];
-      
-      querySnapshot.forEach((doc) => {
-        const data = doc.data() as CrafterData;
-        // Filter by city if selected
-        if (selectedCity === 'all' || data.serviceArea?.includes(selectedCity)) {
-          craftersData.push(data);
-        }
-      });
+      // Get crafter details
+      const craftersRef = collection(db, 'users');
+      const craftersData: CrafterData[] = [];
+
+      for (const uid of featuredUIDs) {
+        const crafterQuery = query(
+          craftersRef,
+          where('uid', '==', uid),
+          where('userType', '==', 'crafter'),
+          where('status', '==', 'active')
+        );
+        
+        const crafterSnapshot = await getDocs(crafterQuery);
+        crafterSnapshot.forEach((doc) => {
+          const data = doc.data() as CrafterData;
+          
+          // Apply filters
+          const cityMatch = selectedCity === 'all' || data.serviceArea?.includes(selectedCity);
+          const specialtyMatch = selectedSpecialty === 'all' || data.specialty === selectedSpecialty;
+          
+          if (cityMatch && specialtyMatch) {
+            craftersData.push(data);
+          }
+        });
+      }
 
       // Sort by rating and completed orders
       craftersData.sort((a, b) => {

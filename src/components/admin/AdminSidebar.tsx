@@ -10,7 +10,8 @@ import {
   Shield,
   Bell,
   CreditCard,
-  MessageSquare
+  MessageSquare,
+  Award
 } from 'lucide-react';
 import {
   Sidebar,
@@ -33,6 +34,11 @@ const adminMenuItems = [
     title: 'إدارة المستخدمين',
     url: '/admin/users',
     icon: Users,
+  },
+  {
+    title: 'الحرفيين المميزين',
+    url: '/admin/featured-crafters',
+    icon: Award,
   },
   {
     title: 'التقارير والإحصائيات',
