@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import EditProfile from "./pages/EditProfile";
+import BestCrafters from "./pages/BestCrafters";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import BottomNavigation from "./components/BottomNavigation";
@@ -51,6 +52,7 @@ const AppContent = () => {
         <Routes>
           {/* Regular App Routes */}
           <Route path="/" element={<Home />} />
+          <Route path="/best-crafters" element={<BestCrafters />} />
           <Route path="/edit-profile" element={<EditProfile />} />
           <Route path="/settings" element={<Settings />} />
           

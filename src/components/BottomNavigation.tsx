@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Package, MessageSquare, Plus, User } from 'lucide-react';
+import { Home, Star, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const BottomNavigation: React.FC = () => {
@@ -12,7 +11,8 @@ const BottomNavigation: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   const navItems = [
-    { icon: Home, label: 'الرئيسية', path: '/' },
+    { icon: Home, label: 'الرئيسة', path: '/' },
+    { icon: Star, label: 'أفضل الحرفيين', path: '/best-crafters' },
     { icon: User, label: 'الملف الشخصي', path: '/profile' }
   ];
 
@@ -27,7 +27,7 @@ const BottomNavigation: React.FC = () => {
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
+              className={`flex flex-col items-center py-2 px-4 rounded-lg transition-colors ${
                 active
                   ? 'text-blue-600 bg-blue-50'
                   : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
