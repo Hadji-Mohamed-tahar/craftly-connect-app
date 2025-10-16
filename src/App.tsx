@@ -17,6 +17,8 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminFeaturedCrafters from "./pages/admin/AdminFeaturedCrafters";
+import AdminFeaturedRequests from "./pages/admin/AdminFeaturedRequests";
+import CrafterMembership from "./pages/CrafterMembership";
 
 const AppContent = () => {
   const { currentUser, loading } = useAuth();
@@ -54,8 +56,10 @@ const AppContent = () => {
             <Route path="users" element={<AdminUsers />} />
             <Route path="analytics" element={<AdminAnalytics />} />
             <Route path="featured-crafters" element={<AdminFeaturedCrafters />} />
+            <Route path="featured-requests" element={<AdminFeaturedRequests />} />
           </Route>
           
+          <Route path="/crafter-membership" element={<CrafterMembership />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <BottomNavigation />

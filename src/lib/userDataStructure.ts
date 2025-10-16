@@ -33,6 +33,8 @@ export interface CrafterData extends BaseUserData {
   experience: string;
   rating: number;
   completedOrders: number;
+  membershipType: 'free' | 'premium';
+  membershipExpiresAt?: string;
   portfolioImages?: string[];
   certifications?: string[];
   workingHours?: {
@@ -108,6 +110,7 @@ export const createUserDocument = (
       experience: registrationData.experience || '',
       rating: 0,
       completedOrders: 0,
+      membershipType: 'free',
       serviceArea: [registrationData.location],
     } as CrafterData;
   } else {

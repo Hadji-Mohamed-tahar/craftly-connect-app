@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Star, User } from 'lucide-react';
+import { Home, Star, User, Crown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { CrafterData } from '@/lib/userDataStructure';
 
 const BottomNavigation: React.FC = () => {
   const navigate = useNavigate();
@@ -9,10 +10,12 @@ const BottomNavigation: React.FC = () => {
   const { userProfile } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
+  const isCrafter = userProfile?.userType === 'crafter';
 
   const navItems = [
     { icon: Home, label: 'الرئيسة', path: '/' },
     { icon: Star, label: 'أفضل الحرفيين', path: '/best-crafters' },
+    ...(isCrafter ? [{ icon: Crown, label: 'العضوية', path: '/crafter-membership' }] : []),
     { icon: User, label: 'الملف الشخصي', path: '/profile' }
   ];
 

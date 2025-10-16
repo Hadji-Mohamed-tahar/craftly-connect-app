@@ -11,7 +11,8 @@ import {
   Bell,
   CreditCard,
   MessageSquare,
-  Award
+  Award,
+  Star
 } from 'lucide-react';
 import {
   Sidebar,
@@ -39,6 +40,11 @@ const adminMenuItems = [
     title: 'الحرفيين المميزين',
     url: '/admin/featured-crafters',
     icon: Award,
+  },
+  {
+    title: 'طلبات الظهور المميز',
+    url: '/admin/featured-requests',
+    icon: Star,
   },
   {
     title: 'التقارير والإحصائيات',
