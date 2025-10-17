@@ -1,5 +1,6 @@
 import { db } from './firebase';
 import { collection, doc, getDoc, setDoc, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { recordMembershipEarning } from './earningsService';
 
 export interface Membership {
   userId: string;
@@ -50,6 +51,10 @@ export const upgradeToPremium = async (userId: string): Promise<boolean> => {
     };
     
     await setDoc(doc(db, 'memberships', userId), membership);
+    
+    // Record the earning
+    await recordMembershipEarning(userId, 499, 'premium', '1 year');
+    
     return true;
   } catch (error) {
     console.error('Error upgrading membership:', error);

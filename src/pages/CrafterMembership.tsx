@@ -180,7 +180,8 @@ const CrafterMembership = () => {
   }
 
   const isPremium = membership.type === 'premium';
-  const canRequestFeatured = isPremium && !featuredRequest;
+  const isRequestRejected = featuredRequest?.status === 'rejected';
+  const canRequestFeatured = isPremium && (!featuredRequest || isRequestRejected);
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
@@ -285,7 +286,7 @@ const CrafterMembership = () => {
               طلب الظهور في قائمة أفضل الحرفيين
             </h2>
 
-            {featuredRequest ? (
+            {featuredRequest && !isRequestRejected ? (
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">حالة الطلب:</span>
@@ -347,6 +348,19 @@ const CrafterMembership = () => {
               </div>
             ) : (
               <div className="space-y-4">
+                {isRequestRejected && featuredRequest && (
+                  <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-4">
+                    <p className="text-sm font-medium text-destructive mb-2">تم رفض طلبك السابق</p>
+                    {featuredRequest.adminNotes && (
+                      <p className="text-sm text-muted-foreground mb-2">
+                        السبب: {featuredRequest.adminNotes}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      يمكنك تقديم طلب جديد مع تحسين ملفك الشخصي بناءً على ملاحظات الإدارة
+                    </p>
+                  </div>
+                )}
                 <p className="text-sm text-muted-foreground">
                   قدم طلباً للظهور في قائمة أفضل الحرفيين. سيتم مراجعة طلبك من قبل الإدارة وإخطارك بالنتيجة.
                 </p>
