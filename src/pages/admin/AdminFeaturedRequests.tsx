@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Star, CheckCircle, XCircle, Clock, User } from 'lucide-react';
 import { CrafterData } from '@/lib/userDataStructure';
+import { Membership, getUserMembership } from '@/lib/membershipService';
 import {
   Dialog,
   DialogContent,
@@ -25,6 +26,7 @@ interface FeaturedRequest {
   adminNotes?: string;
   reviewedAt?: string;
   crafterData?: CrafterData;
+  membership?: Membership;
 }
 
 const AdminFeaturedRequests = () => {
@@ -51,11 +53,15 @@ const AdminFeaturedRequests = () => {
           // Fetch crafter data
           const crafterDoc = await getDoc(doc(db, 'users', data.crafterUid));
           const crafterData = crafterDoc.exists() ? crafterDoc.data() as CrafterData : undefined;
+          
+          // Fetch membership data
+          const membership = await getUserMembership(data.crafterUid);
 
           return {
             id: docSnapshot.id,
             ...data,
             crafterData,
+            membership,
           } as FeaturedRequest;
         })
       );
@@ -229,8 +235,8 @@ const AdminFeaturedRequests = () => {
                       </div>
                       <div>
                         <span className="text-muted-foreground">العضوية: </span>
-                        <Badge variant={request.crafterData.membershipType === 'premium' ? 'default' : 'secondary'}>
-                          {request.crafterData.membershipType === 'premium' ? 'مميزة' : 'مجانية'}
+                        <Badge variant={request.membership?.type === 'premium' ? 'default' : 'secondary'}>
+                          {request.membership?.type === 'premium' ? 'مميزة' : 'مجانية'}
                         </Badge>
                       </div>
                     </div>

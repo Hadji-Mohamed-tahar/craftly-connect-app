@@ -1,12 +1,20 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Phone, MapPin, Wrench, Star, Edit, Crown, LogOut, Settings as SettingsIcon } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { CrafterData } from '../lib/userDataStructure';
+import { Membership, getUserMembership } from '../lib/membershipService';
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
-  const { userProfile, logout } = useAuth();
+  const { userProfile, logout, currentUser } = useAuth();
+  const [membership, setMembership] = useState<Membership | null>(null);
+
+  useEffect(() => {
+    if (currentUser && userProfile?.userType === 'crafter') {
+      getUserMembership(currentUser.uid).then(setMembership);
+    }
+  }, [currentUser, userProfile]);
 
   const handleLogout = async () => {
     try {
@@ -147,34 +155,36 @@ const Profile: React.FC = () => {
             </div>
 
             {/* Membership Section for Crafters */}
-            <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-foreground">العضوية</h3>
-                <Crown className={`w-6 h-6 ${crafterData.membershipType === 'premium' ? 'text-primary' : 'text-muted-foreground'}`} />
-              </div>
-              
-              <div className="space-y-4">
-                <div className="bg-muted rounded-lg p-4">
-                  <p className="text-sm text-muted-foreground mb-2">نوع العضوية الحالية</p>
-                  <p className="text-lg font-bold text-foreground">
-                    {crafterData.membershipType === 'premium' ? 'عضوية مميزة' : 'عضوية مجانية'}
-                  </p>
-                  {crafterData.membershipType === 'premium' && crafterData.membershipExpiresAt && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      تنتهي في: {new Date(crafterData.membershipExpiresAt).toLocaleDateString('ar-SA')}
-                    </p>
-                  )}
+            {membership && (
+              <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-foreground">العضوية</h3>
+                  <Crown className={`w-6 h-6 ${membership.type === 'premium' ? 'text-primary' : 'text-muted-foreground'}`} />
                 </div>
+                
+                <div className="space-y-4">
+                  <div className="bg-muted rounded-lg p-4">
+                    <p className="text-sm text-muted-foreground mb-2">نوع العضوية الحالية</p>
+                    <p className="text-lg font-bold text-foreground">
+                      {membership.type === 'premium' ? 'عضوية مميزة' : 'عضوية مجانية'}
+                    </p>
+                    {membership.type === 'premium' && membership.expiresAt && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        تنتهي في: {new Date(membership.expiresAt).toLocaleDateString('ar-SA')}
+                      </p>
+                    )}
+                  </div>
 
-                <button
-                  onClick={() => navigate('/crafter-membership')}
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-                >
-                  <Crown className="w-5 h-5" />
-                  {crafterData.membershipType === 'premium' ? 'إدارة العضوية' : 'ترقية إلى العضوية المميزة'}
-                </button>
+                  <button
+                    onClick={() => navigate('/crafter-membership')}
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Crown className="w-5 h-5" />
+                    {membership.type === 'premium' ? 'إدارة العضوية' : 'ترقية إلى العضوية المميزة'}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
           </>
         )}
 

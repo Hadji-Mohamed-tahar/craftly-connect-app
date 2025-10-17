@@ -2,14 +2,15 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, updateDoc, addDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, addDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Crown, Star, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { Crown, Star, CheckCircle, Clock, XCircle, CreditCard } from 'lucide-react';
 import { CrafterData } from '@/lib/userDataStructure';
+import { Membership, getUserMembership, upgradeToPremium } from '@/lib/membershipService';
 
 interface FeaturedRequest {
   id: string;
@@ -26,10 +27,12 @@ const CrafterMembership = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [crafterData, setCrafterData] = useState<CrafterData | null>(null);
+  const [membership, setMembership] = useState<Membership | null>(null);
   const [loading, setLoading] = useState(true);
   const [requestNotes, setRequestNotes] = useState('');
   const [featuredRequest, setFeaturedRequest] = useState<FeaturedRequest | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showPaymentDemo, setShowPaymentDemo] = useState(false);
 
   useEffect(() => {
     if (!currentUser) {
@@ -52,6 +55,10 @@ const CrafterMembership = () => {
           return;
         }
         setCrafterData(data);
+        
+        // Get membership data
+        const membershipData = await getUserMembership(currentUser.uid);
+        setMembership(membershipData);
         
         // Check for existing featured request
         const requestsQuery = query(
@@ -79,31 +86,36 @@ const CrafterMembership = () => {
     }
   };
 
-  const upgradeToPremium = async () => {
-    if (!currentUser || !crafterData) return;
+  const handleUpgradeToPremium = () => {
+    setShowPaymentDemo(true);
+  };
+
+  const handleDemoPayment = async () => {
+    if (!currentUser) return;
 
     try {
       setSubmitting(true);
-      const expiresAt = new Date();
-      expiresAt.setFullYear(expiresAt.getFullYear() + 1); // سنة واحدة
-
-      await updateDoc(doc(db, 'users', currentUser.uid), {
-        membershipType: 'premium',
-        membershipExpiresAt: expiresAt.toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
-
-      toast({
-        title: 'تم الترقية بنجاح',
-        description: 'تم ترقية حسابك إلى العضوية المميزة',
-      });
-
-      fetchCrafterData();
+      
+      // Simulate payment processing
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const success = await upgradeToPremium(currentUser.uid);
+      
+      if (success) {
+        toast({
+          title: 'تم الدفع بنجاح',
+          description: 'تم ترقية حسابك إلى العضوية المميزة',
+        });
+        setShowPaymentDemo(false);
+        fetchCrafterData();
+      } else {
+        throw new Error('Upgrade failed');
+      }
     } catch (error) {
       console.error('Error upgrading membership:', error);
       toast({
         title: 'خطأ',
-        description: 'حدث خطأ في ترقية العضوية',
+        description: 'حدث خطأ في معالجة الدفع',
         variant: 'destructive',
       });
     } finally {
@@ -112,9 +124,9 @@ const CrafterMembership = () => {
   };
 
   const submitFeaturedRequest = async () => {
-    if (!currentUser || !crafterData) return;
+    if (!currentUser || !membership) return;
 
-    if (crafterData.membershipType !== 'premium') {
+    if (membership.type !== 'premium') {
       toast({
         title: 'عضوية مميزة مطلوبة',
         description: 'يجب أن تكون لديك عضوية مميزة لتقديم هذا الطلب',
@@ -163,11 +175,11 @@ const CrafterMembership = () => {
     );
   }
 
-  if (!crafterData) {
+  if (!crafterData || !membership) {
     return null;
   }
 
-  const isPremium = crafterData.membershipType === 'premium';
+  const isPremium = membership.type === 'premium';
   const canRequestFeatured = isPremium && !featuredRequest;
 
   return (
@@ -194,9 +206,9 @@ const CrafterMembership = () => {
             </Badge>
           </div>
           
-          {isPremium && crafterData.membershipExpiresAt && (
+          {isPremium && membership.expiresAt && (
             <p className="text-sm text-muted-foreground">
-              تنتهي في: {new Date(crafterData.membershipExpiresAt).toLocaleDateString('ar-SA')}
+              تنتهي في: {new Date(membership.expiresAt).toLocaleDateString('ar-SA')}
             </p>
           )}
         </Card>
@@ -255,11 +267,11 @@ const CrafterMembership = () => {
             </ul>
             {!isPremium && (
               <Button 
-                onClick={upgradeToPremium} 
+                onClick={handleUpgradeToPremium} 
                 disabled={submitting}
                 className="w-full"
               >
-                {submitting ? 'جاري الترقية...' : 'الترقية الآن'}
+                الترقية الآن
               </Button>
             )}
           </Card>
@@ -367,6 +379,76 @@ const CrafterMembership = () => {
               قم بالترقية إلى العضوية المميزة للحصول على فرصة الظهور في قائمة أفضل الحرفيين
             </p>
           </Card>
+        )}
+
+        {/* Demo Payment Modal */}
+        {showPaymentDemo && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <Card className="max-w-md w-full p-6">
+              <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+                <CreditCard className="w-6 h-6 text-primary" />
+                دفع تجريبي
+              </h3>
+              
+              <div className="space-y-4 mb-6">
+                <div className="bg-muted rounded-lg p-4">
+                  <p className="text-sm text-muted-foreground mb-2">المبلغ المطلوب</p>
+                  <p className="text-2xl font-bold text-foreground">499 ر.س</p>
+                  <p className="text-xs text-muted-foreground mt-1">عضوية مميزة لمدة سنة واحدة</p>
+                </div>
+
+                <div className="border border-border rounded-lg p-4">
+                  <p className="text-sm font-medium text-foreground mb-3">معلومات البطاقة (تجريبي)</p>
+                  <div className="space-y-3">
+                    <input
+                      type="text"
+                      placeholder="رقم البطاقة: 4242 4242 4242 4242"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm"
+                      disabled
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <input
+                        type="text"
+                        placeholder="MM/YY: 12/25"
+                        className="px-3 py-2 bg-background border border-border rounded-lg text-sm"
+                        disabled
+                      />
+                      <input
+                        type="text"
+                        placeholder="CVV: 123"
+                        className="px-3 py-2 bg-background border border-border rounded-lg text-sm"
+                        disabled
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                  <p className="text-xs text-blue-800 dark:text-blue-200">
+                    📝 هذا نظام دفع تجريبي. سيتم تفعيل عضويتك المميزة مباشرة بدون دفع فعلي.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => setShowPaymentDemo(false)}
+                  variant="outline"
+                  className="flex-1"
+                  disabled={submitting}
+                >
+                  إلغاء
+                </Button>
+                <Button
+                  onClick={handleDemoPayment}
+                  className="flex-1"
+                  disabled={submitting}
+                >
+                  {submitting ? 'جاري المعالجة...' : 'تأكيد الدفع'}
+                </Button>
+              </div>
+            </Card>
+          </div>
         )}
       </div>
     </div>
