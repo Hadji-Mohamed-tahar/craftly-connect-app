@@ -39,6 +39,17 @@ export const getUserMembership = async (userId: string): Promise<Membership | nu
 // Upgrade to premium membership (Demo payment)
 export const upgradeToPremium = async (userId: string): Promise<boolean> => {
   try {
+    // Get user info
+    const usersRef = collection(db, 'users');
+    const userQuery = query(usersRef, where('uid', '==', userId));
+    const userSnapshot = await getDocs(userQuery);
+    
+    let userName = 'مستخدم';
+    if (!userSnapshot.empty) {
+      const userData = userSnapshot.docs[0].data();
+      userName = userData.name || 'مستخدم';
+    }
+    
     const expiresAt = new Date();
     expiresAt.setFullYear(expiresAt.getFullYear() + 1); // 1 year
     
@@ -52,8 +63,17 @@ export const upgradeToPremium = async (userId: string): Promise<boolean> => {
     
     await setDoc(doc(db, 'memberships', userId), membership);
     
-    // Record the earning
-    await recordMembershipEarning(userId, 499, 'premium', '1 year');
+    // Record the earning with user name and details
+    await recordMembershipEarning(
+      userId,
+      userName,
+      499,
+      'premium',
+      '1 year',
+      'مباشر',
+      `TXN-${Date.now()}`,
+      'ترقية العضوية إلى بريميوم - سنة واحدة'
+    );
     
     return true;
   } catch (error) {
