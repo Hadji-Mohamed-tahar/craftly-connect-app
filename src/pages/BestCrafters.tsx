@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { CrafterData, SPECIALTIES, SUPPORTED_CITIES } from '@/lib/userDataStructure';
@@ -10,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 
 const BestCrafters: React.FC = () => {
+  const navigate = useNavigate();
   const [crafters, setCrafters] = useState<CrafterData[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCity, setSelectedCity] = useState<string>('all');
@@ -229,7 +231,11 @@ const BestCrafters: React.FC = () => {
                     </div>
                   )}
 
-                  <Button className="w-full mt-4" size="sm">
+                  <Button 
+                    className="w-full mt-4" 
+                    size="sm"
+                    onClick={() => navigate(`/crafter/${crafter.uid}`)}
+                  >
                     عرض الملف الشخصي
                   </Button>
                 </CardContent>

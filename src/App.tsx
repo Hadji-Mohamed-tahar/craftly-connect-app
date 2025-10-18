@@ -7,6 +7,7 @@ import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
 import BestCrafters from "./pages/BestCrafters";
+import CrafterProfile from "./pages/CrafterProfile";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import BottomNavigation from "./components/BottomNavigation";
@@ -48,6 +49,7 @@ const AppContent = () => {
           {/* Regular App Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/best-crafters" element={<BestCrafters />} />
+          <Route path="/crafter/:crafterId" element={<CrafterProfile />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/edit-profile" element={<EditProfile />} />
           <Route path="/settings" element={<Settings />} />
