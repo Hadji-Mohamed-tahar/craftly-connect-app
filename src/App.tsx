@@ -20,6 +20,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminFeaturedCrafters from "./pages/admin/AdminFeaturedCrafters";
 import AdminFeaturedRequests from "./pages/admin/AdminFeaturedRequests";
+import AdminMembershipPlans from "./pages/admin/AdminMembershipPlans";
 import CrafterMembership from "./pages/CrafterMembership";
 
 const AppContent = () => {
@@ -58,6 +59,7 @@ const AppContent = () => {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="users" element={<AdminUsers />} />
+            <Route path="membership-plans" element={<AdminMembershipPlans />} />
             <Route path="analytics" element={<AdminAnalytics />} />
             <Route path="featured-crafters" element={<AdminFeaturedCrafters />} />
             <Route path="featured-requests" element={<AdminFeaturedRequests />} />

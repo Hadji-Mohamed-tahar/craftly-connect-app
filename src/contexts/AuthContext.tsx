@@ -71,13 +71,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const adminData = await checkAdminStatus(user.uid);
           if (adminData) {
             console.log('User is admin');
+            // الأدمن منفصل تماماً - لا يمكن أن يكون حرفي أو عميل
             setUserProfile(adminData);
           } else {
-            // جلب بيانات المستخدم العادي
+            // جلب بيانات المستخدم العادي (حرفي أو عميل فقط)
             const userDoc = await getDoc(doc(db, 'users', user.uid));
             if (userDoc.exists()) {
+              const userData = userDoc.data() as UserProfile;
+              // التأكد من أن المستخدم ليس أدمن
+              if (userData.userType === 'admin') {
+                console.error('Invalid user type: admin in users collection');
+                await signOut(auth);
+                return;
+              }
               console.log('User profile loaded from Firestore');
-              setUserProfile(userDoc.data() as UserProfile);
+              setUserProfile(userData);
             } else {
               console.log('Creating fallback profile - user doc not found');
               // إنشاء ملف احتياطي

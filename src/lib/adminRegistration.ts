@@ -55,25 +55,20 @@ export const registerAdmin = async (adminData: AdminRegistrationData): Promise<A
       throw new Error('يجب تسجيل الدخول أولاً');
     }
 
-    // التحقق من صلاحية المستخدم الحالي
-    const currentUserDoc = await getDoc(doc(db, 'users', currentUser.uid));
-    if (!currentUserDoc.exists()) {
-      throw new Error('المستخدم غير موجود');
-    }
-
-    const currentUserData = currentUserDoc.data() as AdminData;
-    if (currentUserData.userType !== 'admin' || currentUserData.role !== 'super_admin') {
+    // التحقق من صلاحية المستخدم الحالي من collection الأدمن فقط
+    const currentUserData = await checkAdminStatus(currentUser.uid);
+    if (!currentUserData || currentUserData.role !== 'super_admin') {
       throw new Error('ليس لديك صلاحية لإضافة إدمن جديد');
     }
 
-    // التحقق من عدم وجود إيميل مكرر
-    const existingUserQuery = query(
-      collection(db, 'users'), 
+    // التحقق من عدم وجود إيميل مكرر في الأدمن
+    const existingAdminQuery = query(
+      collection(db, 'admins'), 
       where('email', '==', adminData.email)
     );
-    const existingUsers = await getDocs(existingUserQuery);
+    const existingAdmins = await getDocs(existingAdminQuery);
     
-    if (!existingUsers.empty) {
+    if (!existingAdmins.empty) {
       throw new Error('البريد الإلكتروني مستخدم مسبقاً');
     }
 
@@ -104,19 +99,10 @@ export const registerAdmin = async (adminData: AdminRegistrationData): Promise<A
       (adminDocument as any).employeeId = adminData.employeeId;
     }
 
-    // حفظ في قاعدة البيانات
-    await setDoc(doc(db, 'users', user.uid), adminDocument);
-
-    // إضافة في جدول الإدمن المنفصل للسهولة
+    // حفظ في collection الأدمن فقط (الأدمن منفصل تماماً عن المستخدمين)
     await setDoc(doc(db, 'admins', user.uid), {
-      uid: user.uid,
-      email: adminData.email,
-      name: adminData.name,
-      role: adminData.role,
-      permissions: adminDocument.permissions,
-      createdAt: adminDocument.createdAt,
+      ...adminDocument,
       createdBy: currentUser.uid,
-      department: adminData.department,
       employeeId: adminData.employeeId,
     });
 
@@ -128,15 +114,12 @@ export const registerAdmin = async (adminData: AdminRegistrationData): Promise<A
   }
 };
 
-// التحقق من أن المستخدم إدمن
+// التحقق من أن المستخدم إدمن (من collection الأدمن فقط - منفصل تماماً)
 export const checkAdminStatus = async (uid: string): Promise<AdminData | null> => {
   try {
     const adminDoc = await getDoc(doc(db, 'admins', uid));
     if (adminDoc.exists()) {
-      const userDoc = await getDoc(doc(db, 'users', uid));
-      if (userDoc.exists()) {
-        return userDoc.data() as AdminData;
-      }
+      return adminDoc.data() as AdminData;
     }
     return null;
   } catch (error) {
@@ -145,21 +128,16 @@ export const checkAdminStatus = async (uid: string): Promise<AdminData | null> =
   }
 };
 
-// الحصول على جميع الإدمن
+// الحصول على جميع الإدمن (من collection الأدمن فقط - منفصل تماماً)
 export const getAllAdmins = async (): Promise<AdminData[]> => {
   try {
     const adminsQuery = query(collection(db, 'admins'));
     const adminsSnapshot = await getDocs(adminsQuery);
     
-    const adminIds = adminsSnapshot.docs.map(doc => doc.id);
     const adminDetails: AdminData[] = [];
-
-    for (const adminId of adminIds) {
-      const userDoc = await getDoc(doc(db, 'users', adminId));
-      if (userDoc.exists()) {
-        adminDetails.push(userDoc.data() as AdminData);
-      }
-    }
+    adminsSnapshot.docs.forEach(doc => {
+      adminDetails.push(doc.data() as AdminData);
+    });
 
     return adminDetails;
   } catch (error) {
@@ -185,13 +163,7 @@ export const updateAdminPermissions = async (
       throw new Error('ليس لديك صلاحية لتعديل صلاحيات الإدمن');
     }
 
-    // تحديث في جدول المستخدمين
-    await setDoc(doc(db, 'users', adminId), {
-      permissions: newPermissions,
-      updatedAt: new Date().toISOString()
-    }, { merge: true });
-
-    // تحديث في جدول الإدمن
+    // تحديث في collection الأدمن فقط (منفصل تماماً)
     await setDoc(doc(db, 'admins', adminId), {
       permissions: newPermissions,
       updatedAt: new Date().toISOString(),
@@ -223,15 +195,7 @@ export const deleteAdmin = async (adminId: string): Promise<void> => {
       throw new Error('لا يمكن حذف حسابك الخاص');
     }
 
-    // تحديث حالة المستخدم بدلاً من الحذف الفعلي
-    await setDoc(doc(db, 'users', adminId), {
-      status: 'suspended',
-      updatedAt: new Date().toISOString(),
-      suspendedBy: currentUser.uid,
-      suspendedAt: new Date().toISOString()
-    }, { merge: true });
-
-    // تحديث في جدول الإدمن
+    // تحديث حالة الأدمن في collection الأدمن فقط (منفصل تماماً)
     await setDoc(doc(db, 'admins', adminId), {
       status: 'suspended',
       updatedAt: new Date().toISOString(),

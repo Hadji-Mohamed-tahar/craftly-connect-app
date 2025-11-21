@@ -12,7 +12,8 @@ import {
   CreditCard,
   MessageSquare,
   Award,
-  Star
+  Star,
+  Package
 } from 'lucide-react';
 import {
   Sidebar,
@@ -35,6 +36,11 @@ const adminMenuItems = [
     title: 'إدارة المستخدمين',
     url: '/admin/users',
     icon: Users,
+  },
+  {
+    title: 'خطط العضوية',
+    url: '/admin/membership-plans',
+    icon: Package,
   },
   {
     title: 'الحرفيين المميزين',
