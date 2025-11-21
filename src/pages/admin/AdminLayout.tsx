@@ -9,7 +9,7 @@ import { LogOut } from 'lucide-react';
 
 export default function AdminLayout() {
   const { isAdmin, loading } = useAdmin();
-  const { logout } = useAuth();
+  const { logout, userProfile } = useAuth();
 
   if (loading) {
     return (
@@ -22,7 +22,8 @@ export default function AdminLayout() {
     );
   }
 
-  if (!isAdmin) {
+  // Double check: must be admin type AND verified as admin
+  if (!isAdmin || userProfile?.userType !== 'admin') {
     return <Navigate to="/" replace />;
   }
 

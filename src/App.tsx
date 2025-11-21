@@ -14,6 +14,7 @@ import BottomNavigation from "./components/BottomNavigation";
 import AuthForm from "./components/AuthForm";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AdminProvider } from "./contexts/AdminContext";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -24,16 +25,14 @@ import AdminMembershipPlans from "./pages/admin/AdminMembershipPlans";
 import CrafterMembership from "./pages/CrafterMembership";
 
 const AppContent = () => {
-  const { currentUser, loading } = useAuth();
-
-  console.log('AppContent rendered - loading:', loading, 'currentUser:', currentUser ? 'exists' : 'null');
+  const { currentUser, userProfile, loading } = useAuth();
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">جاري التحميل...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center animate-fade-in">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground text-sm sm:text-base">جاري التحميل...</p>
         </div>
       </div>
     );
@@ -43,20 +42,19 @@ const AppContent = () => {
     return <AuthForm />;
   }
 
+  // Separate rendering for admin vs regular users
+  const isAdmin = userProfile?.userType === 'admin';
+
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-gray-50 pb-20">
+      <div className="min-h-screen bg-background">
         <Routes>
-          {/* Regular App Routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/best-crafters" element={<BestCrafters />} />
-          <Route path="/crafter/:crafterId" element={<CrafterProfile />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/edit-profile" element={<EditProfile />} />
-          <Route path="/settings" element={<Settings />} />
-          
-          {/* Admin Routes */}
-          <Route path="/admin" element={<AdminLayout />}>
+          {/* Admin Routes - Only for admins */}
+          <Route path="/admin" element={
+            <ProtectedRoute adminOnly>
+              <AdminLayout />
+            </ProtectedRoute>
+          }>
             <Route index element={<AdminDashboard />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="membership-plans" element={<AdminMembershipPlans />} />
@@ -64,11 +62,49 @@ const AppContent = () => {
             <Route path="featured-crafters" element={<AdminFeaturedCrafters />} />
             <Route path="featured-requests" element={<AdminFeaturedRequests />} />
           </Route>
+
+          {/* User Routes - Only for clients and crafters */}
+          <Route path="/" element={
+            <ProtectedRoute userOnly>
+              <Home />
+            </ProtectedRoute>
+          } />
+          <Route path="/best-crafters" element={
+            <ProtectedRoute userOnly>
+              <BestCrafters />
+            </ProtectedRoute>
+          } />
+          <Route path="/crafter/:crafterId" element={
+            <ProtectedRoute userOnly>
+              <CrafterProfile />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute userOnly>
+              <Profile />
+            </ProtectedRoute>
+          } />
+          <Route path="/edit-profile" element={
+            <ProtectedRoute userOnly>
+              <EditProfile />
+            </ProtectedRoute>
+          } />
+          <Route path="/settings" element={
+            <ProtectedRoute userOnly>
+              <Settings />
+            </ProtectedRoute>
+          } />
+          <Route path="/crafter-membership" element={
+            <ProtectedRoute userOnly>
+              <CrafterMembership />
+            </ProtectedRoute>
+          } />
           
-          <Route path="/crafter-membership" element={<CrafterMembership />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
-        <BottomNavigation />
+        
+        {/* Show bottom navigation only for regular users, not for admins */}
+        {!isAdmin && <BottomNavigation />}
       </div>
     </BrowserRouter>
   );
