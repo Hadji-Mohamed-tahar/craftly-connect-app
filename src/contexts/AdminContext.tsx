@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { collection, getDocs, doc, updateDoc, deleteDoc, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from './AuthContext';
+import { checkAdminStatus } from '../lib/adminRegistration';
 
 interface AdminStats {
   totalUsers: number;
@@ -51,18 +52,19 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [orders, setOrders] = useState<any[]>([]);
 
   useEffect(() => {
-    // Check if user is admin (you can add admin emails here)
-    if (userProfile) {
-      const adminEmails = ['admin@craft.com', 'admin@example.com'];
-      console.log('Checking admin status for:', userProfile.email);
-      console.log('Admin emails:', adminEmails);
-      const isUserAdmin = adminEmails.includes(userProfile.email);
-      console.log('Is admin:', isUserAdmin);
-      setIsAdmin(isUserAdmin);
-    } else {
-      console.log('No user profile found');
-      setIsAdmin(false);
-    }
+    // Check if user is admin from admins collection only
+    const checkAdmin = async () => {
+      if (userProfile && userProfile.userType === 'admin') {
+        // Verify from admins collection
+        const adminData = await checkAdminStatus(userProfile.uid);
+        setIsAdmin(!!adminData);
+      } else {
+        setIsAdmin(false);
+      }
+      setLoading(false);
+    };
+    
+    checkAdmin();
   }, [userProfile]);
 
   const fetchStats = async () => {
