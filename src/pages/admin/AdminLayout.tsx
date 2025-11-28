@@ -1,31 +1,13 @@
 import React from 'react';
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
-import { useAdmin } from '@/contexts/AdminContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 
 export default function AdminLayout() {
-  const { isAdmin, loading } = useAdmin();
-  const { logout, userProfile } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center animate-fade-in">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground text-sm sm:text-base">جاري التحميل...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Double check: must be admin type AND verified as admin
-  if (!isAdmin || userProfile?.userType !== 'admin') {
-    return <Navigate to="/admin/login" replace />;
-  }
+  const { logout, adminData } = useAdminAuth();
 
   return (
     <SidebarProvider defaultOpen={true} open={true}>

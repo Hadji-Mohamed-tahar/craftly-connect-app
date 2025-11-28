@@ -4,6 +4,9 @@ import { doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase
 import { auth, db } from './firebase';
 import { AdminData, AdminPermission, createAdminDocument } from './userDataStructure';
 
+// Re-export for convenience
+export type { AdminData, AdminPermission } from './userDataStructure';
+
 // بيانات تسجيل الإدمن
 export interface AdminRegistrationData {
   email: string;

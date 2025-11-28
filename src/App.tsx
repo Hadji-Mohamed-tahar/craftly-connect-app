@@ -13,8 +13,10 @@ import NotFound from "./pages/NotFound";
 import BottomNavigation from "./components/BottomNavigation";
 import AuthForm from "./components/AuthForm";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import { AdminProvider } from "./contexts/AdminContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { AdminProtectedRoute } from "./components/admin/AdminProtectedRoute";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -25,8 +27,9 @@ import AdminMembershipPlans from "./pages/admin/AdminMembershipPlans";
 import AdminLogin from "./pages/admin/AdminLogin";
 import CrafterMembership from "./pages/CrafterMembership";
 
-const AppContent = () => {
-  const { currentUser, userProfile, loading } = useAuth();
+// User App Content - Separate from Admin
+const UserAppContent = () => {
+  const { currentUser, loading } = useAuth();
 
   if (loading) {
     return (
@@ -43,87 +46,99 @@ const AppContent = () => {
     return <AuthForm />;
   }
 
-  // Separate rendering for admin vs regular users
-  const isAdmin = userProfile?.userType === 'admin';
-
   return (
-    <BrowserRouter>
-      <div className="min-h-screen bg-background">
-        <Routes>
-          {/* Admin Login - Public route for admins */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-
-          {/* Admin Routes - Only for admins */}
-          <Route path="/admin" element={
-            <ProtectedRoute adminOnly>
-              <AdminLayout />
-            </ProtectedRoute>
-          }>
-            <Route index element={<AdminDashboard />} />
-            <Route path="users" element={<AdminUsers />} />
-            <Route path="membership-plans" element={<AdminMembershipPlans />} />
-            <Route path="analytics" element={<AdminAnalytics />} />
-            <Route path="featured-crafters" element={<AdminFeaturedCrafters />} />
-            <Route path="featured-requests" element={<AdminFeaturedRequests />} />
-          </Route>
-
-          {/* User Routes - Only for clients and crafters */}
-          <Route path="/" element={
-            <ProtectedRoute userOnly>
-              <Home />
-            </ProtectedRoute>
-          } />
-          <Route path="/best-crafters" element={
-            <ProtectedRoute userOnly>
-              <BestCrafters />
-            </ProtectedRoute>
-          } />
-          <Route path="/crafter/:crafterId" element={
-            <ProtectedRoute userOnly>
-              <CrafterProfile />
-            </ProtectedRoute>
-          } />
-          <Route path="/profile" element={
-            <ProtectedRoute userOnly>
-              <Profile />
-            </ProtectedRoute>
-          } />
-          <Route path="/edit-profile" element={
-            <ProtectedRoute userOnly>
-              <EditProfile />
-            </ProtectedRoute>
-          } />
-          <Route path="/settings" element={
-            <ProtectedRoute userOnly>
-              <Settings />
-            </ProtectedRoute>
-          } />
-          <Route path="/crafter-membership" element={
-            <ProtectedRoute userOnly>
-              <CrafterMembership />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        
-        {/* Show bottom navigation only for regular users, not for admins */}
-        {!isAdmin && <BottomNavigation />}
-      </div>
-    </BrowserRouter>
+    <>
+      <Routes>
+        <Route path="/" element={
+          <ProtectedRoute userOnly>
+            <Home />
+          </ProtectedRoute>
+        } />
+        <Route path="/best-crafters" element={
+          <ProtectedRoute userOnly>
+            <BestCrafters />
+          </ProtectedRoute>
+        } />
+        <Route path="/crafter/:crafterId" element={
+          <ProtectedRoute userOnly>
+            <CrafterProfile />
+          </ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute userOnly>
+            <Profile />
+          </ProtectedRoute>
+        } />
+        <Route path="/edit-profile" element={
+          <ProtectedRoute userOnly>
+            <EditProfile />
+          </ProtectedRoute>
+        } />
+        <Route path="/settings" element={
+          <ProtectedRoute userOnly>
+            <Settings />
+          </ProtectedRoute>
+        } />
+        <Route path="/crafter-membership" element={
+          <ProtectedRoute userOnly>
+            <CrafterMembership />
+          </ProtectedRoute>
+        } />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <BottomNavigation />
+    </>
   );
 };
 
-const App = () => (
-  <TooltipProvider>
-    <Toaster />
-    <Sonner />
-    <AuthProvider>
-      <AdminProvider>
-        <AppContent />
-      </AdminProvider>
-    </AuthProvider>
-  </TooltipProvider>
-);
+// Admin App Content - Completely separate
+const AdminAppContent = () => {
+  return (
+    <Routes>
+      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route path="/admin" element={
+        <AdminProtectedRoute>
+          <AdminLayout />
+        </AdminProtectedRoute>
+      }>
+        <Route index element={<AdminDashboard />} />
+        <Route path="users" element={<AdminUsers />} />
+        <Route path="membership-plans" element={<AdminMembershipPlans />} />
+        <Route path="analytics" element={<AdminAnalytics />} />
+        <Route path="featured-crafters" element={<AdminFeaturedCrafters />} />
+        <Route path="featured-requests" element={<AdminFeaturedRequests />} />
+      </Route>
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
+
+const App = () => {
+  return (
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          {/* Admin routes - completely separate */}
+          <Route path="/admin/*" element={
+            <AdminAuthProvider>
+              <AdminProvider>
+                <AdminAppContent />
+              </AdminProvider>
+            </AdminAuthProvider>
+          } />
+          
+          {/* User routes - completely separate */}
+          <Route path="/*" element={
+            <AuthProvider>
+              <UserAppContent />
+            </AuthProvider>
+          } />
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
+  );
+};
 
 export default App;
