@@ -4,11 +4,11 @@ import { Eye, EyeOff, Mail, Lock, Shield } from 'lucide-react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { checkAdminStatus } from '@/lib/adminRegistration';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
 const AdminLogin = () => {
   const navigate = useNavigate();
-  const { currentUser, userProfile } = useAuth();
+  const { currentAdmin, adminData } = useAdminAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -20,10 +20,10 @@ const AdminLogin = () => {
 
   // Redirect if already logged in as admin
   useEffect(() => {
-    if (currentUser && userProfile?.userType === 'admin') {
+    if (currentAdmin && adminData) {
       navigate('/admin', { replace: true });
     }
-  }, [currentUser, userProfile, navigate]);
+  }, [currentAdmin, adminData, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

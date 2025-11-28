@@ -1,13 +1,12 @@
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
-interface ProtectedRouteProps {
+interface AdminProtectedRouteProps {
   children: React.ReactNode;
-  userOnly?: boolean;
 }
 
-export const ProtectedRoute = ({ children, userOnly }: ProtectedRouteProps) => {
-  const { userProfile, loading } = useAuth();
+export const AdminProtectedRoute = ({ children }: AdminProtectedRouteProps) => {
+  const { currentAdmin, adminData, loading } = useAdminAuth();
 
   if (loading) {
     return (
@@ -20,8 +19,8 @@ export const ProtectedRoute = ({ children, userOnly }: ProtectedRouteProps) => {
     );
   }
 
-  // Only allow regular users (clients and crafters)
-  if (userOnly && userProfile?.userType === 'admin') {
+  // Not logged in or not an admin
+  if (!currentAdmin || !adminData) {
     return <Navigate to="/admin/login" replace />;
   }
 

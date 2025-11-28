@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { useAuth } from './AuthContext';
-import { checkAdminStatus } from '../lib/adminRegistration';
+import { useAdminAuth } from './AdminAuthContext';
 
 interface AdminStats {
   totalUsers: number;
@@ -36,8 +35,7 @@ export const useAdmin = () => {
 };
 
 export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { userProfile } = useAuth();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { currentAdmin, adminData } = useAdminAuth();
   const [stats, setStats] = useState<AdminStats>({
     totalUsers: 0,
     totalClients: 0,
@@ -51,21 +49,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [users, setUsers] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
 
-  useEffect(() => {
-    // Check if user is admin from admins collection only
-    const checkAdmin = async () => {
-      if (userProfile && userProfile.userType === 'admin') {
-        // Verify from admins collection
-        const adminData = await checkAdminStatus(userProfile.uid);
-        setIsAdmin(!!adminData);
-      } else {
-        setIsAdmin(false);
-      }
-      setLoading(false);
-    };
-    
-    checkAdmin();
-  }, [userProfile]);
+  const isAdmin = !!currentAdmin && !!adminData;
 
   const fetchStats = async () => {
     try {
