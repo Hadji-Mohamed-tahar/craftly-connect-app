@@ -22,6 +22,7 @@ import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminFeaturedCrafters from "./pages/admin/AdminFeaturedCrafters";
 import AdminFeaturedRequests from "./pages/admin/AdminFeaturedRequests";
 import AdminMembershipPlans from "./pages/admin/AdminMembershipPlans";
+import AdminLogin from "./pages/admin/AdminLogin";
 import CrafterMembership from "./pages/CrafterMembership";
 
 const AppContent = () => {
@@ -49,6 +50,9 @@ const AppContent = () => {
     <BrowserRouter>
       <div className="min-h-screen bg-background">
         <Routes>
+          {/* Admin Login - Public route for admins */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+
           {/* Admin Routes - Only for admins */}
           <Route path="/admin" element={
             <ProtectedRoute adminOnly>

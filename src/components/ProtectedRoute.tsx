@@ -23,7 +23,7 @@ export const ProtectedRoute = ({ children, adminOnly, userOnly }: ProtectedRoute
 
   // Admin trying to access user routes
   if (userOnly && userProfile?.userType === 'admin') {
-    return <Navigate to="/admin" replace />;
+    return <Navigate to="/admin/login" replace />;
   }
 
   // Non-admin trying to access admin routes

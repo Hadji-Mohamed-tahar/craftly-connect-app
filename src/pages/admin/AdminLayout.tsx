@@ -24,7 +24,7 @@ export default function AdminLayout() {
 
   // Double check: must be admin type AND verified as admin
   if (!isAdmin || userProfile?.userType !== 'admin') {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/admin/login" replace />;
   }
 
   return (
